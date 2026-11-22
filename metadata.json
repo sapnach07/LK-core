@@ -1,0 +1,6 @@
+{
+  "name": "LK Core 1.0",
+  "description": "Reusable LK Hybrid Glass design system, theme engine, settings foundation, and interactive component playground for the LK ecosystem.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
