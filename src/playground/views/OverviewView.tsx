@@ -18,69 +18,31 @@ import {
 const DARK_BACKDROP = '/src/assets/images/glass_backdrop_obsidian_gold_1795344428773.jpg';
 const LIGHT_BACKDROP = '/src/assets/images/glass_backdrop_arctic_frost_1795344427778.jpg';
 
-const CORE_MODULES: Array<{
+const MODULE_META: Array<{
   id: string;
-  name: string;
   target: PlaygroundSectionId;
-  icon: 'Layers' | 'Palette' | 'Settings' | 'Wand2' | 'Zap' | 'Compass' | 'HardDrive' | 'Shield';
-  summary: string;
+  icon:
+    | 'Layers'
+    | 'BarChart3'
+    | 'Palette'
+    | 'Settings'
+    | 'Wand2'
+    | 'Zap'
+    | 'Compass'
+    | 'HardDrive'
+    | 'Shield'
+    | 'FileCode2';
 }> = [
-  {
-    id: 'lk-design',
-    name: 'LK Design',
-    target: 'components',
-    icon: 'Layers',
-    summary: 'Buttons, cards, inputs, dialogs, switches, selects, menus, and toast feedback.',
-  },
-  {
-    id: 'lk-themes',
-    name: 'LK Themes',
-    target: 'themes',
-    icon: 'Palette',
-    summary: 'Dark, light, system-adaptive, preset themes, and custom accent hex support.',
-  },
-  {
-    id: 'lk-settings',
-    name: 'LK Settings',
-    target: 'settings',
-    icon: 'Settings',
-    summary: '13 functional preference categories synced immediately to local storage.',
-  },
-  {
-    id: 'lk-glass',
-    name: 'LK Glass',
-    target: 'glass',
-    icon: 'Wand2',
-    summary: 'Apple-inspired specular refraction paired with One UI structural clarity.',
-  },
-  {
-    id: 'lk-motion',
-    name: 'LK Motion',
-    target: 'motion',
-    icon: 'Zap',
-    summary: 'Spring physics and reveal curves honoring reduced-motion and speed settings.',
-  },
-  {
-    id: 'lk-icons',
-    name: 'LK Icons',
-    target: 'icons',
-    icon: 'Compass',
-    summary: 'Consistent geometric LK emblem and curated Lucide icon catalog.',
-  },
-  {
-    id: 'lk-storage',
-    name: 'LK Storage',
-    target: 'settings',
-    icon: 'HardDrive',
-    summary: 'Schema-validated local persistence with byte diagnostics and JSON import/export.',
-  },
-  {
-    id: 'lk-a11y',
-    name: 'LK Accessibility',
-    target: 'themes',
-    icon: 'Shield',
-    summary: 'WCAG AA/AAA contrast engine, readable type scaling, and focus rings.',
-  },
+  { id: 'lk-design', target: 'components', icon: 'Layers' },
+  { id: 'lk-charts', target: 'charts', icon: 'BarChart3' },
+  { id: 'lk-themes', target: 'themes', icon: 'Palette' },
+  { id: 'lk-settings', target: 'settings', icon: 'Settings' },
+  { id: 'lk-glass', target: 'glass', icon: 'Wand2' },
+  { id: 'lk-motion', target: 'motion', icon: 'Zap' },
+  { id: 'lk-icons', target: 'icons', icon: 'Compass' },
+  { id: 'lk-storage', target: 'settings', icon: 'HardDrive' },
+  { id: 'lk-a11y', target: 'themes', icon: 'Shield' },
+  { id: 'lk-platform', target: 'docs', icon: 'FileCode2' },
 ];
 
 export function OverviewView({
@@ -88,15 +50,23 @@ export function OverviewView({
 }: {
   onNavigate: (section: PlaygroundSectionId) => void;
 }) {
-  const { settings, resolvedTheme, updateSettings, storageStats, notify } = useLkCore();
+  const { settings, resolvedTheme, dictionary, updateSettings, storageStats, notify } = useLkCore();
   const [imgError, setImgError] = useState(false);
 
+  const t = dictionary.overview;
   const activeBackdrop = resolvedTheme === 'dark' ? DARK_BACKDROP : LIGHT_BACKDROP;
   const activeBg = resolvedTheme === 'dark' ? settings.customDarkBg : settings.customLightBg;
   const contrastAudit = evaluateContrast(
     resolvedTheme === 'dark' ? '#FFFFFF' : '#090A0D',
     activeBg,
   );
+
+  const presetLabel =
+    settings.themePreset !== 'custom'
+      ? dictionary.presets[settings.themePreset].name
+      : dictionary.settings.customThemeOption;
+
+  const modeLabel = resolvedTheme === 'dark' ? dictionary.common.dark : dictionary.common.light;
 
   return (
     <div className="flex flex-col gap-8">
@@ -105,22 +75,20 @@ export function OverviewView({
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
           <div className="lg:col-span-7 flex flex-col justify-between gap-6">
             <div>
-              <p className="text-xs font-medium tracking-wide" style={{ color: 'var(--lk-accent)' }}>
-                LK Hybrid Glass · Cross-Platform Design Foundation
+              <p className="text-xs font-medium tracking-wide" style={{ color: 'var(--lk-accent-ink)' }}>
+                {t.kicker}
               </p>
               <h1
                 className="text-3xl sm:text-4xl font-bold tracking-tight mt-2 leading-tight"
                 style={{ color: 'var(--lk-text)', textWrap: 'balance' }}
               >
-                Unified interface architecture for the LK ecosystem.
+                {t.heroTitle}
               </h1>
               <p
                 className="text-base mt-3 leading-relaxed max-w-2xl"
                 style={{ color: 'var(--lk-text-secondary)' }}
               >
-                Built for zero-dependency reuse across Google AI Studio web applications and
-                platform-neutral Android Kotlin exports. Every surface, token, and preference in this
-                playground is live and locally persisted.
+                {t.heroSubtitle}
               </p>
             </div>
 
@@ -130,21 +98,21 @@ export function OverviewView({
                 rightIcon="ArrowRight"
                 onClick={() => onNavigate('components')}
               >
-                Explore Component Gallery
+                {t.ctaComponents}
               </LkButton>
               <LkButton
                 variant="secondary"
                 leftIcon="Settings"
                 onClick={() => onNavigate('settings')}
               >
-                Open Settings Engine
+                {t.ctaSettings}
               </LkButton>
               <LkButton
                 variant="ghost"
                 leftIcon="FileCode2"
                 onClick={() => onNavigate('docs')}
               >
-                Integration Guide
+                {t.ctaDocs}
               </LkButton>
             </div>
 
@@ -155,23 +123,23 @@ export function OverviewView({
             >
               <div>
                 <p className="text-xs" style={{ color: 'var(--lk-text-muted)' }}>
-                  Active Profile
+                  {t.kpiProfile}
                 </p>
-                <p className="text-sm font-semibold mt-1 capitalize" style={{ color: 'var(--lk-text)' }}>
-                  {resolvedTheme} · {settings.themePreset}
+                <p className="text-sm font-semibold mt-1" style={{ color: 'var(--lk-text)' }}>
+                  {modeLabel} · {presetLabel}
                 </p>
               </div>
               <div>
                 <p className="text-xs" style={{ color: 'var(--lk-text-muted)' }}>
-                  Glass Blur
+                  {t.kpiBlur}
                 </p>
                 <p className="text-sm font-semibold font-mono tabular-nums mt-1" style={{ color: 'var(--lk-text)' }}>
-                  {settings.glassEnabled ? `${settings.blurIntensity}px` : 'Disabled'}
+                  {settings.glassEnabled ? `${settings.blurIntensity}px` : dictionary.common.disabled}
                 </p>
               </div>
               <div>
                 <p className="text-xs" style={{ color: 'var(--lk-text-muted)' }}>
-                  Text Contrast
+                  {t.kpiContrast}
                 </p>
                 <p className="text-sm font-semibold font-mono tabular-nums mt-1" style={{ color: 'var(--lk-text)' }}>
                   {contrastAudit.ratioFormatted} ({contrastAudit.grade})
@@ -179,21 +147,24 @@ export function OverviewView({
               </div>
               <div>
                 <p className="text-xs" style={{ color: 'var(--lk-text-muted)' }}>
-                  Local Footprint
+                  {t.kpiFootprint}
                 </p>
                 <p className="text-sm font-semibold font-mono tabular-nums mt-1" style={{ color: 'var(--lk-text)' }}>
-                  {formatLkNumber(storageStats.totalBytes, settings.numberFormat)} B
+                  {formatLkNumber(storageStats.totalBytes, settings.numberFormat)} o
                 </p>
               </div>
             </div>
           </div>
 
           {/* Right Live Glass Refraction Frame */}
-          <div className="lg:col-span-5 relative rounded-2xl overflow-hidden border min-h-[280px] flex items-end p-5" style={{ borderColor: 'var(--lk-border)' }}>
+          <div
+            className="lg:col-span-5 relative rounded-2xl overflow-hidden border min-h-[280px] flex items-end p-5"
+            style={{ borderColor: 'var(--lk-border)' }}
+          >
             {!imgError ? (
               <img
                 src={activeBackdrop}
-                alt="Architectural studio surface demonstrating LK Hybrid Glass refraction"
+                alt={t.backdropAlt}
                 referrerPolicy="no-referrer"
                 onError={() => setImgError(true)}
                 className="absolute inset-0 w-full h-full object-cover"
@@ -219,30 +190,32 @@ export function OverviewView({
             <LkGlassSurface intensity="elevated" rounded="xl" className="relative z-10 w-full p-4">
               <div className="flex items-center justify-between gap-3 mb-3">
                 <span className="text-xs font-semibold" style={{ color: 'var(--lk-text)' }}>
-                  Live Hybrid Glass Controls
+                  {t.glassCardTitle}
                 </span>
-                <span className="text-xs font-mono tabular-nums" style={{ color: 'var(--lk-accent)' }}>
+                <span className="text-xs font-mono tabular-nums" style={{ color: 'var(--lk-accent-ink)' }}>
                   {formatLkDateTime(new Date(), settings.language, settings.timeFormat)}
                 </span>
               </div>
               <div className="flex flex-col gap-3">
                 <LkSlider
-                  label="Backdrop Blur"
+                  label={t.blurLabel}
                   min={0}
                   max={32}
                   unit="px"
                   value={settings.blurIntensity}
                   onChange={(val) => updateSettings({ blurIntensity: val, glassEnabled: val > 0 })}
                 />
-                <div className="flex items-center justify-between gap-2 pt-1">
+                <div className="flex items-center justify-between gap-2 pt-1 flex-wrap">
                   <LkSegmentedControl
-                    ariaLabel="Quick theme switcher"
+                    ariaLabel={dictionary.settings.colorMode}
                     value={settings.themeMode}
-                    onChange={(mode) => updateSettings({ themeMode: mode }, `Switched mode to ${mode}`)}
+                    onChange={(mode) =>
+                      updateSettings({ themeMode: mode }, `${dictionary.settings.colorMode}: ${mode}`)
+                    }
                     options={[
-                      { value: 'dark', label: 'Dark' },
-                      { value: 'light', label: 'Light' },
-                      { value: 'system', label: 'System' },
+                      { value: 'dark', label: dictionary.common.dark },
+                      { value: 'light', label: dictionary.common.light },
+                      { value: 'system', label: dictionary.common.system },
                     ]}
                   />
                   <LkButton
@@ -250,13 +223,13 @@ export function OverviewView({
                     variant="primary"
                     onClick={() =>
                       notify({
-                        title: 'LK Core Ready',
-                        description: 'Theme & glass parameters are synced to local storage.',
+                        title: t.pingToastTitle,
+                        description: t.pingToastDesc,
                         variant: 'success',
                       })
                     }
                   >
-                    Ping Toast
+                    {t.pingToast}
                   </LkButton>
                 </div>
               </div>
@@ -267,31 +240,31 @@ export function OverviewView({
 
       {/* Brand Palette Strip */}
       <section aria-labelledby="lk-palette-heading">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between gap-4 mb-4 flex-wrap">
           <div>
             <h2
               id="lk-palette-heading"
               className="text-lg font-semibold tracking-tight"
               style={{ color: 'var(--lk-text)' }}
             >
-              LK Hybrid Glass Core Palette
+              {t.paletteTitle}
             </h2>
             <p className="text-sm" style={{ color: 'var(--lk-text-secondary)' }}>
-              Default foundation swatches engineered for 60-30-10 tonal hierarchy.
+              {t.paletteSubtitle}
             </p>
           </div>
           <LkButton size="sm" variant="secondary" onClick={() => onNavigate('themes')}>
-            Customize Palette
+            {t.customizePalette}
           </LkButton>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
           {[
-            { name: 'Obsidian', hex: LK_BRAND_COLORS.obsidian, role: 'Primary Dark Canvas' },
-            { name: 'Graphite', hex: LK_BRAND_COLORS.graphite, role: 'Elevated Dark Surface' },
-            { name: 'LK Gold', hex: LK_BRAND_COLORS.gold, role: 'Signature Accent' },
-            { name: 'Silver', hex: LK_BRAND_COLORS.silver, role: 'Secondary Metadata' },
-            { name: 'Pure White', hex: LK_BRAND_COLORS.pureWhite, role: 'Light Surface & Ink' },
+            { name: 'Obsidian', hex: LK_BRAND_COLORS.obsidian, role: t.swatchRoles.obsidian },
+            { name: 'Graphite', hex: LK_BRAND_COLORS.graphite, role: t.swatchRoles.graphite },
+            { name: 'LK Gold', hex: LK_BRAND_COLORS.gold, role: t.swatchRoles.gold },
+            { name: 'Silver', hex: LK_BRAND_COLORS.silver, role: t.swatchRoles.silver },
+            { name: 'Pure White', hex: LK_BRAND_COLORS.pureWhite, role: t.swatchRoles.pureWhite },
           ].map((swatch) => (
             <LkCard key={swatch.name} surface="solid" className="!p-3.5">
               <div
@@ -304,7 +277,7 @@ export function OverviewView({
               <p className="text-sm font-semibold" style={{ color: 'var(--lk-text)' }}>
                 {swatch.name}
               </p>
-              <p className="text-xs font-mono tabular-nums mt-0.5" style={{ color: 'var(--lk-accent)' }}>
+              <p className="text-xs font-mono tabular-nums mt-0.5" style={{ color: 'var(--lk-accent-ink)' }}>
                 {swatch.hex}
               </p>
               <p className="text-xs mt-1" style={{ color: 'var(--lk-text-muted)' }}>
@@ -323,46 +296,49 @@ export function OverviewView({
             className="text-lg font-semibold tracking-tight"
             style={{ color: 'var(--lk-text)' }}
           >
-            Modular Architecture
+            {t.modulesTitle}
           </h2>
           <p className="text-sm" style={{ color: 'var(--lk-text-secondary)' }}>
-            Eight decoupled subsystems exported from a single TypeScript entry point.
+            {t.modulesSubtitle}
           </p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {CORE_MODULES.map((mod) => (
-            <button
-              key={mod.id}
-              type="button"
-              onClick={() => onNavigate(mod.target)}
-              className="text-left rounded-2xl border p-4 transition-all hover:brightness-105 cursor-pointer lk-focus-ring"
-              style={{
-                backgroundColor: 'var(--lk-surface)',
-                borderColor: 'var(--lk-border)',
-                backdropFilter: settings.glassEnabled ? `blur(${settings.blurIntensity}px)` : 'none',
-              }}
-            >
-              <div className="flex items-center justify-between gap-2 mb-2.5">
-                <span
-                  className="inline-flex items-center justify-center w-8 h-8 rounded-lg"
-                  style={{
-                    backgroundColor: 'var(--lk-accent-soft)',
-                    color: 'var(--lk-accent)',
-                  }}
-                >
-                  <LkIcon name={mod.icon} size={17} />
-                </span>
-                <LkIcon name="ChevronRight" size={15} className="opacity-50" />
-              </div>
-              <h3 className="text-sm font-semibold" style={{ color: 'var(--lk-text)' }}>
-                {mod.name}
-              </h3>
-              <p className="text-xs mt-1 leading-relaxed" style={{ color: 'var(--lk-text-secondary)' }}>
-                {mod.summary}
-              </p>
-            </button>
-          ))}
+          {MODULE_META.map((mod) => {
+            const copy = t.modules[mod.id];
+            return (
+              <button
+                key={mod.id}
+                type="button"
+                onClick={() => onNavigate(mod.target)}
+                className="text-left rounded-2xl border p-4 transition-all hover:brightness-105 cursor-pointer lk-focus-ring"
+                style={{
+                  backgroundColor: 'var(--lk-surface)',
+                  borderColor: 'var(--lk-border)',
+                  backdropFilter: settings.glassEnabled ? `blur(${settings.blurIntensity}px)` : 'none',
+                }}
+              >
+                <div className="flex items-center justify-between gap-2 mb-2.5">
+                  <span
+                    className="inline-flex items-center justify-center w-8 h-8 rounded-lg"
+                    style={{
+                      backgroundColor: 'var(--lk-accent-soft)',
+                      color: 'var(--lk-accent-ink)',
+                    }}
+                  >
+                    <LkIcon name={mod.icon} size={17} />
+                  </span>
+                  <LkIcon name="ChevronRight" size={15} className="opacity-50" />
+                </div>
+                <h3 className="text-sm font-semibold" style={{ color: 'var(--lk-text)' }}>
+                  {copy.name}
+                </h3>
+                <p className="text-xs mt-1 leading-relaxed" style={{ color: 'var(--lk-text-secondary)' }}>
+                  {copy.summary}
+                </p>
+              </button>
+            );
+          })}
         </div>
       </section>
     </div>

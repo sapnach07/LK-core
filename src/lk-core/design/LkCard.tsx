@@ -46,7 +46,7 @@ export function LkCard({
   if (surface === 'solid') {
     return (
       <div
-        className={`rounded-2xl border ${padding === 'normal' ? 'p-[var(--lk-density-pad)]' : ''} ${className}`}
+        className={`min-w-0 rounded-2xl border ${padding === 'normal' ? 'p-[var(--lk-density-pad)]' : ''} ${className}`}
         style={{
           backgroundColor: 'var(--lk-surface-solid)',
           borderColor: 'var(--lk-border)',
@@ -62,7 +62,7 @@ export function LkCard({
   return (
     <LkGlassSurface
       rounded="2xl"
-      className={`${padding === 'normal' ? 'p-[var(--lk-density-pad)]' : ''} ${className}`}
+      className={`min-w-0 ${padding === 'normal' ? 'p-[var(--lk-density-pad)]' : ''} ${className}`}
       {...rest}
     >
       {headerBlock}

@@ -1,54 +1,34 @@
-// LK Core 1.0 — Public Reusable Module Exports
+// @lk/core 1.0.0 — Public Modular Exports
 
 // Types
 export * from './types';
 
-// Tokens & Contrast
-export * from './tokens/designTokens';
-export * from './tokens/contrast';
-export * from './tokens/exportTokens';
+// 1. LK Design
+export * from './design/index';
 
-// Storage & i18n
-export * from './storage/lkStorage';
-export * from './i18n/translations';
+// 2. LK Themes
+export * from './themes/index';
 
-// Theme & Settings Provider
-export {
-  LkProvider,
-  useLkCore,
-  useLkTheme,
-  useLkSettings,
-  useLkToast,
-} from './themes/LkThemeProvider';
+// 3. LK Glass
+export * from './glass/index';
 
-// Glass Surfaces
-export { LkGlassSurface, LkGlassPanel, LkGlassHeader } from './glass/LkGlass';
+// 4. LK Motion
+export * from './motion/index';
 
-// Motion
-export {
-  useLkMotionConfig,
-  LkMotionReveal,
-  LkMotionInteractive,
-} from './motion/LkMotion';
+// 5. LK Icons
+export * from './icons/index';
 
-// Icons
-export {
-  LkLogoMark,
-  LkIcon,
-  LK_ICON_CATALOG,
-  LK_ICON_REGISTRY,
-} from './icons/LkIcon';
-export type { LkIconName, LkIconMeta } from './icons/LkIcon';
+// 6. LK Settings
+export * from './settings/index';
 
-// Accessibility
-export * from './accessibility/LkAccessibility';
+// 7. LK Storage
+export * from './storage/index';
 
-// UI Components (LK Design)
-export { LkButton } from './design/LkButton';
-export { LkCard } from './design/LkCard';
-export { LkInput } from './design/LkInput';
-export { LkSelect, LkSegmentedControl } from './design/LkSelect';
-export { LkSwitch, LkSlider } from './design/LkSwitch';
-export { LkDialog } from './design/LkDialog';
-export { LkDropdown } from './design/LkDropdown';
-export { LkToastRegion } from './design/LkToast';
+// 8. LK Accessibility
+export * from './accessibility/index';
+
+// 9. LK Platform
+export * from './platform/index';
+
+// 10. LK Charts
+export * from './charts/index';

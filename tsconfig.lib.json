@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "declarationMap": true,
+    "emitDeclarationOnly": true,
+    "outDir": "./dist",
+    "rootDir": "./src/lk-core",
+    "skipLibCheck": true
+  },
+  "include": ["src/lk-core/**/*.ts", "src/lk-core/**/*.tsx"],
+  "exclude": ["src/lk-core/**/*.test.ts", "src/lk-core/styles/entry.ts", "src/playground", "dist"]
+}

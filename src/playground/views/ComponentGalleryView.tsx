@@ -13,51 +13,66 @@ import {
 } from '../../lk-core';
 
 export function ComponentGalleryView() {
-  const { notify, settings, updateSettings } = useLkCore();
+  const { notify, settings, dictionary, updateSettings } = useLkCore();
+  const c = dictionary.components;
+
   const [dialogOpen, setDialogOpen] = useState(false);
   const [loadingDemo, setLoadingDemo] = useState(false);
 
-  const [projectName, setProjectName] = useState('LK Notes App');
+  const [projectName, setProjectName] = useState(c.appNameDefault);
   const [apiSecretInput, setApiSecretInput] = useState('lk_preview_token_example');
   const [environment, setEnvironment] = useState<'react' | 'kotlin' | 'hybrid'>('react');
   const [segmentTab, setSegmentTab] = useState<'all' | 'forms' | 'overlays'>('all');
   const [autoSync, setAutoSync] = useState(true);
   const [radiusSample, setRadiusSample] = useState(16);
 
-  const nameError =
-    projectName.trim().length < 3 ? 'Project name must be at least 3 characters.' : undefined;
+  const nameError = projectName.trim().length < 3 ? c.appNameError : undefined;
 
   const triggerLoading = () => {
     setLoadingDemo(true);
     setTimeout(() => {
       setLoadingDemo(false);
       notify({
-        title: 'Action completed',
-        description: 'Simulated async button cycle finished cleanly.',
+        title: c.btnPrimary,
+        description: c.buttonsCardSubtitle,
         variant: 'success',
       });
     }, 900);
   };
+
+  const densityLabel =
+    settings.density === 'compact'
+      ? dictionary.common.compact
+      : settings.density === 'spacious'
+        ? dictionary.common.spacious
+        : dictionary.common.comfortable;
+
+  const fontScaleLabel =
+    settings.fontScale === 'compact'
+      ? dictionary.common.compact
+      : settings.fontScale === 'large'
+        ? dictionary.common.large
+        : dictionary.common.standard;
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--lk-text)' }}>
-            LK Design Component Gallery
+            {c.title}
           </h1>
           <p className="text-sm mt-1" style={{ color: 'var(--lk-text-secondary)' }}>
-            Interactive test bench for buttons, form controls, menus, dialogs, and toast notifications.
+            {c.subtitle}
           </p>
         </div>
         <LkSegmentedControl
-          ariaLabel="Filter component sections"
+          ariaLabel={c.filterAria}
           value={segmentTab}
           onChange={setSegmentTab}
           options={[
-            { value: 'all', label: 'All Components' },
-            { value: 'forms', label: 'Inputs & Toggles' },
-            { value: 'overlays', label: 'Dialogs & Menus' },
+            { value: 'all', label: c.tabs.all },
+            { value: 'forms', label: c.tabs.forms },
+            { value: 'overlays', label: c.tabs.overlays },
           ]}
         />
       </div>
@@ -65,74 +80,71 @@ export function ComponentGalleryView() {
       {(segmentTab === 'all' || segmentTab === 'forms') && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Buttons Showcase */}
-          <LkCard
-            title="Action Buttons"
-            subtitle="Single-line controls with accessible focus rings and semantic variants."
-          >
+          <LkCard title={c.buttonsCardTitle} subtitle={c.buttonsCardSubtitle}>
             <div className="flex flex-wrap gap-3">
               <LkButton
                 variant="primary"
                 leftIcon="Check"
                 onClick={() =>
                   notify({
-                    title: 'Primary action',
-                    description: 'Primary LK accent button clicked.',
+                    title: c.btnPrimary,
+                    description: c.buttonsCardSubtitle,
                     variant: 'info',
                   })
                 }
               >
-                Primary Action
+                {c.btnPrimary}
               </LkButton>
               <LkButton
                 variant="secondary"
                 leftIcon="Copy"
                 onClick={() =>
                   notify({
-                    title: 'Secondary action',
-                    description: 'Secondary structural button clicked.',
+                    title: c.btnSecondary,
+                    description: c.buttonsCardSubtitle,
                     variant: 'info',
                   })
                 }
               >
-                Secondary
+                {c.btnSecondary}
               </LkButton>
               <LkButton
                 variant="glass"
                 leftIcon="Wand2"
                 onClick={() =>
                   notify({
-                    title: 'Glass surface action',
-                    description: 'Translucent glass button pressed.',
+                    title: c.btnGlass,
+                    description: c.buttonsCardSubtitle,
                     variant: 'success',
                   })
                 }
               >
-                Glass Surface
+                {c.btnGlass}
               </LkButton>
               <LkButton
                 variant="ghost"
                 onClick={() =>
                   notify({
-                    title: 'Ghost action',
-                    description: 'Low-emphasis ghost control triggered.',
+                    title: c.btnGhost,
+                    description: c.buttonsCardSubtitle,
                     variant: 'info',
                   })
                 }
               >
-                Ghost
+                {c.btnGhost}
               </LkButton>
               <LkButton
                 variant="danger"
                 leftIcon="Trash2"
                 onClick={() =>
                   notify({
-                    title: 'Destructive confirmation',
-                    description: 'Danger variant demonstrates semantic alert color.',
+                    title: c.btnDanger,
+                    description: c.buttonsCardSubtitle,
                     variant: 'warning',
                   })
                 }
               >
-                Danger
+                {c.btnDanger}
               </LkButton>
             </div>
 
@@ -141,81 +153,78 @@ export function ComponentGalleryView() {
               style={{ borderColor: 'var(--lk-border)' }}
             >
               <LkButton size="sm" variant="secondary" onClick={triggerLoading} loading={loadingDemo}>
-                {loadingDemo ? 'Processing...' : 'Test Loading State'}
+                {loadingDemo ? dictionary.common.loading : c.btnTestLoading}
               </LkButton>
               <LkButton size="md" variant="primary" disabled>
-                Disabled State
+                {c.btnDisabled}
               </LkButton>
             </div>
           </LkCard>
 
           {/* Form Inputs & Validation */}
-          <LkCard
-            title="Inputs & Validation"
-            subtitle="Accessible labels, live validation errors, password reveal, and native select."
-          >
+          <LkCard title={c.inputsCardTitle} subtitle={c.inputsCardSubtitle}>
             <div className="flex flex-col gap-4">
               <LkInput
-                label="Target Application Name"
+                label={c.appNameLabel}
                 leftIcon="Folder"
                 value={projectName}
                 onChange={(e) => setProjectName(e.target.value)}
                 errorText={nameError}
-                helperText={!nameError ? 'Clear the input below 3 chars to inspect error state.' : undefined}
+                helperText={!nameError ? c.appNameHelper : undefined}
               />
               <LkInput
-                label="Local Signing Key"
+                label={c.signingKeyLabel}
                 type="password"
                 leftIcon="Lock"
                 allowPasswordToggle
+                showPasswordLabel={dictionary.common.showPassword}
+                hidePasswordLabel={dictionary.common.hidePassword}
                 value={apiSecretInput}
                 onChange={(e) => setApiSecretInput(e.target.value)}
               />
               <LkSelect
-                label="Target Runtime"
+                label={c.runtimeLabel}
                 value={environment}
                 onChange={setEnvironment}
                 options={[
-                  { value: 'react', label: 'React 19 + TypeScript (AI Studio)' },
-                  { value: 'kotlin', label: 'Android Jetpack Compose (Kotlin)' },
-                  { value: 'hybrid', label: 'Shared Token Pipeline (Web + Mobile)' },
+                  { value: 'react', label: c.runtimeOptions.react },
+                  { value: 'kotlin', label: c.runtimeOptions.kotlin },
+                  { value: 'hybrid', label: c.runtimeOptions.hybrid },
                 ]}
               />
             </div>
           </LkCard>
 
           {/* Switches, Sliders & Segmented Controls */}
-          <LkCard
-            title="Toggles & Sliders"
-            subtitle="One UI inspired tactile switches and precision range controls."
-          >
+          <LkCard title={c.togglesCardTitle} subtitle={c.togglesCardSubtitle}>
             <div className="flex flex-col gap-4">
               <LkSwitch
-                label="Auto-sync Local Preferences"
-                description="Immediately write configuration updates to browser storage."
+                label={c.autoSyncLabel}
+                description={c.autoSyncDesc}
                 checked={autoSync}
                 onChange={(next) => {
                   setAutoSync(next);
                   notify({
-                    title: next ? 'Auto-sync enabled' : 'Auto-sync paused',
+                    title: c.autoSyncLabel,
+                    description: next ? dictionary.common.active : dictionary.common.disabled,
                     variant: 'info',
                   });
                 }}
               />
               <LkSwitch
-                label="Specular Glass Rim"
-                description="Toggle top-edge light refraction across all LK Cards."
+                label={c.specularLabel}
+                description={c.specularDesc}
                 checked={settings.specularHighlight}
                 onChange={(next) =>
                   updateSettings(
                     { specularHighlight: next },
-                    `Specular highlight ${next ? 'enabled' : 'disabled'}`,
+                    `${c.specularLabel}: ${next ? dictionary.common.active : dictionary.common.disabled}`,
                   )
                 }
               />
               <div className="pt-2">
                 <LkSlider
-                  label="Preview Corner Radius"
+                  label={c.radiusSliderLabel}
                   min={4}
                   max={28}
                   unit="px"
@@ -231,8 +240,8 @@ export function ComponentGalleryView() {
                     color: 'var(--lk-text-secondary)',
                   }}
                 >
-                  <span>Live radius container</span>
-                  <span className="font-mono tabular-nums" style={{ color: 'var(--lk-accent)' }}>
+                  <span>{c.radiusPreviewLabel}</span>
+                  <span className="font-mono tabular-nums" style={{ color: 'var(--lk-accent-ink)' }}>
                     {radiusSample}px
                   </span>
                 </div>
@@ -240,17 +249,14 @@ export function ComponentGalleryView() {
             </div>
           </LkCard>
 
-          {/* Cards & Navigation Tabs */}
-          <LkCard
-            title="Surface Modes & Tabular Data"
-            subtitle="Single-elevation surfaces using clean hairline dividers rather than nested boxes."
-          >
+          {/* Cards & Tabular Tokens */}
+          <LkCard title={c.surfacesCardTitle} subtitle={c.surfacesCardSubtitle}>
             <div className="divide-y" style={{ borderColor: 'var(--lk-border)' }}>
               {[
-                { token: '--lk-accent', value: settings.accentColor, role: 'Primary Action Ink' },
-                { token: '--lk-blur', value: `${settings.blurIntensity}px`, role: 'Backdrop Filter' },
-                { token: '--lk-density-pad', value: settings.density, role: 'Layout Spacing' },
-                { token: '--lk-font-scale', value: settings.fontScale, role: 'Typography Scale' },
+                { token: '--lk-accent', value: settings.accentColor, role: c.tokenRoles.accent },
+                { token: '--lk-blur', value: `${settings.blurIntensity}px`, role: c.tokenRoles.blur },
+                { token: '--lk-density-pad', value: densityLabel, role: c.tokenRoles.density },
+                { token: '--lk-font-scale', value: fontScaleLabel, role: c.tokenRoles.fontScale },
               ].map((row) => (
                 <div
                   key={row.token}
@@ -267,7 +273,7 @@ export function ComponentGalleryView() {
                   </div>
                   <span
                     className="font-mono text-xs tabular-nums font-medium"
-                    style={{ color: 'var(--lk-accent)' }}
+                    style={{ color: 'var(--lk-accent-ink)' }}
                   >
                     {row.value}
                   </span>
@@ -279,50 +285,47 @@ export function ComponentGalleryView() {
       )}
 
       {(segmentTab === 'all' || segmentTab === 'overlays') && (
-        <LkCard
-          title="Dialogs, Menus & Notification Feedback"
-          subtitle="Keyboard-accessible overlays (Escape to dismiss) and live toast dispatching."
-        >
+        <LkCard title={c.overlaysCardTitle} subtitle={c.overlaysCardSubtitle}>
           <div className="flex flex-wrap items-center gap-3">
             <LkButton variant="primary" leftIcon="Layers" onClick={() => setDialogOpen(true)}>
-              Open Modal Dialog
+              {c.openDialogBtn}
             </LkButton>
 
             <LkDropdown
-              triggerLabel="Component Actions"
+              triggerLabel={c.dropdownLabel}
               triggerIcon="Menu"
               items={[
                 {
                   id: 'toast-success',
-                  label: 'Dispatch Success Toast',
+                  label: c.menuSuccess,
                   icon: 'CheckCircle2',
                   onSelect: () =>
                     notify({
-                      title: 'Token bundle verified',
-                      description: 'All semantic tokens meet WCAG AA contrast.',
+                      title: dictionary.toastVariants.success,
+                      description: c.menuSuccess,
                       variant: 'success',
                     }),
                 },
                 {
                   id: 'toast-warning',
-                  label: 'Dispatch Warning Toast',
+                  label: c.menuWarning,
                   icon: 'AlertTriangle',
                   onSelect: () =>
                     notify({
-                      title: 'Blur intensity elevated',
-                      description: 'High backdrop blur can increase GPU fill cost on mobile.',
+                      title: dictionary.toastVariants.warning,
+                      description: c.menuWarning,
                       variant: 'warning',
                     }),
                 },
                 {
                   id: 'toast-error',
-                  label: 'Dispatch Error Toast',
+                  label: c.menuError,
                   icon: 'AlertCircle',
                   danger: true,
                   onSelect: () =>
                     notify({
-                      title: 'Simulated validation error',
-                      description: 'Example error feedback channel for LK forms.',
+                      title: dictionary.toastVariants.error,
+                      description: c.menuError,
                       variant: 'error',
                     }),
                 },
@@ -334,13 +337,15 @@ export function ComponentGalleryView() {
               leftIcon="Bell"
               onClick={() =>
                 notify({
-                  title: 'Test Notification',
-                  description: `Notifications are ${settings.notificationsEnabled ? 'active' : 'muted in Settings'}.`,
+                  title: dictionary.actions.testToast,
+                  description: settings.notificationsEnabled
+                    ? dictionary.settings.inAppNotifDesc
+                    : dictionary.common.disabled,
                   variant: 'info',
                 })
               }
             >
-              Trigger Notification
+              {c.triggerNotifBtn}
             </LkButton>
           </div>
         </LkCard>
@@ -349,35 +354,37 @@ export function ComponentGalleryView() {
       <LkDialog
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}
-        title="LK Hybrid Glass Dialog"
-        description="Accessible modal container with dynamic backdrop blur, Escape dismissal, and focus containment."
+        title={c.dialogTitle}
+        description={c.dialogDesc}
+        closeLabel={dictionary.common.closeDialog}
         footer={
           <>
             <LkButton variant="ghost" onClick={() => setDialogOpen(false)}>
-              Cancel
+              {dictionary.common.cancel}
             </LkButton>
             <LkButton
               variant="primary"
               onClick={() => {
                 setDialogOpen(false);
                 notify({
-                  title: 'Dialog confirmed',
-                  description: `Target runtime set to ${environment}.`,
+                  title: c.dialogConfirm,
+                  description: `${c.runtimeLabel}: ${c.runtimeOptions[environment]}`,
                   variant: 'success',
                 });
               }}
             >
-              Confirm Selection
+              {c.dialogConfirm}
             </LkButton>
           </>
         }
       >
         <p className="leading-relaxed">
-          This dialog automatically inherits the active LK Theme Mode, custom accent color (
-          <span className="font-mono" style={{ color: 'var(--lk-accent)' }}>
+          {c.dialogBodyPrefix}
+          <span className="font-mono" style={{ color: 'var(--lk-accent-ink)' }}>
             {settings.accentColor}
           </span>
-          ), and glass blur radius ({settings.blurIntensity}px).
+          {c.dialogBodyMiddle}
+          {settings.blurIntensity}px).
         </p>
       </LkDialog>
     </div>

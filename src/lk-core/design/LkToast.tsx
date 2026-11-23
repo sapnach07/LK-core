@@ -7,16 +7,16 @@ import { LK_FOCUS_RING_CLASS } from '../accessibility/LkAccessibility';
 
 const VARIANT_META: Record<
   'info' | 'success' | 'warning' | 'error',
-  { icon: LkIconName; color: string; label: string }
+  { icon: LkIconName; color: string }
 > = {
-  info: { icon: 'Info', color: '#4C8DFF', label: 'Info' },
-  success: { icon: 'CheckCircle2', color: '#16A34A', label: 'Success' },
-  warning: { icon: 'AlertTriangle', color: '#D97706', label: 'Warning' },
-  error: { icon: 'AlertCircle', color: '#DC2626', label: 'Error' },
+  info: { icon: 'Info', color: '#4C8DFF' },
+  success: { icon: 'CheckCircle2', color: '#16A34A' },
+  warning: { icon: 'AlertTriangle', color: '#D97706' },
+  error: { icon: 'AlertCircle', color: '#DC2626' },
 };
 
 export function LkToastRegion() {
-  const { toasts, dismissToast, settings } = useLkCore();
+  const { toasts, dismissToast, settings, dictionary } = useLkCore();
   const { isReduced, durationMs } = useLkMotionConfig();
 
   if (toasts.length === 0) return null;
@@ -24,11 +24,12 @@ export function LkToastRegion() {
   return (
     <div
       aria-live="polite"
-      aria-label="Notifications"
+      aria-label={dictionary.settingsHeaders.notifications}
       className="fixed bottom-4 right-4 z-50 flex flex-col gap-2.5 w-full max-w-sm pointer-events-none px-4 sm:px-0"
     >
       {toasts.map((toast) => {
         const meta = VARIANT_META[toast.variant];
+        const variantLabel = dictionary.toastVariants[toast.variant];
         return (
           <div
             key={toast.id}
@@ -51,7 +52,7 @@ export function LkToastRegion() {
                       {toast.title}
                     </p>
                     <span className="text-[11px] font-medium" style={{ color: meta.color }}>
-                      {meta.label}
+                      {variantLabel}
                     </span>
                   </div>
                   {toast.description && (
@@ -66,7 +67,7 @@ export function LkToastRegion() {
                 <button
                   type="button"
                   onClick={() => dismissToast(toast.id)}
-                  aria-label={`Dismiss ${toast.title}`}
+                  aria-label={`${dictionary.common.dismissPrefix} ${toast.title}`}
                   className={`p-1 rounded-lg cursor-pointer shrink-0 ${LK_FOCUS_RING_CLASS}`}
                   style={{ color: 'var(--lk-text-muted)' }}
                 >

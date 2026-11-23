@@ -22,7 +22,19 @@ import {
   recordLkActivity,
   saveLkSettings,
 } from '../storage/lkStorage';
-import { LK_TRANSLATIONS, type LkDictionary } from '../i18n/translations';
+import { getLkDictionary, type LkDictionary } from '../i18n/translations';
+
+export interface LkProviderProps {
+  children: React.ReactNode;
+  /** Optional namespace prefix for localStorage keys so independent LK apps keep isolated preferences */
+  storagePrefix?: string;
+  /** Optional default settings merged over LK Core defaults when no saved settings exist */
+  defaultSettings?: Partial<LkSettings>;
+  /** Whether LkProvider should update document.title automatically (default: false for client apps) */
+  manageDocumentTitle?: boolean;
+  /** Whether settings should persist to browser localStorage (default: true) */
+  persistSettings?: boolean;
+}
 
 interface LkContextValue {
   settings: LkSettings;
@@ -31,6 +43,7 @@ interface LkContextValue {
   toasts: LkToastItem[];
   storageStats: LkStorageStats;
   activityLog: Array<{ label: string; ts: string }>;
+  storagePrefix?: string;
   updateSettings: (patch: Partial<LkSettings>, activityLabel?: string) => void;
   applyThemePreset: (presetId: LkThemePresetId) => void;
   resetSettings: () => void;
@@ -47,13 +60,30 @@ function detectSystemTheme(): 'dark' | 'light' {
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
-export function LkProvider({ children }: { children: React.ReactNode }) {
-  const [settings, setSettings] = useState<LkSettings>(() => loadLkSettings());
+export function LkProvider({
+  children,
+  storagePrefix,
+  defaultSettings,
+  manageDocumentTitle = false,
+  persistSettings = true,
+}: LkProviderProps) {
+  const mergedDefaults = useMemo<LkSettings>(
+    () => ({ ...DEFAULT_LK_SETTINGS, ...(defaultSettings ?? {}) }),
+    [defaultSettings],
+  );
+
+  const [settings, setSettings] = useState<LkSettings>(() =>
+    persistSettings ? loadLkSettings(storagePrefix, mergedDefaults) : mergedDefaults,
+  );
   const [systemTheme, setSystemTheme] = useState<'dark' | 'light'>(() => detectSystemTheme());
   const [toasts, setToasts] = useState<LkToastItem[]>([]);
-  const [storageStats, setStorageStats] = useState<LkStorageStats>(() => getLkStorageStats());
+  const [storageStats, setStorageStats] = useState<LkStorageStats>(() =>
+    persistSettings
+      ? getLkStorageStats(storagePrefix)
+      : { totalBytes: 0, settingsBytes: 0, historyBytes: 0, keyCount: 0, lastSavedAt: null },
+  );
   const [activityLog, setActivityLog] = useState<Array<{ label: string; ts: string }>>(() =>
-    getLkActivityHistory(),
+    persistSettings ? getLkActivityHistory(storagePrefix) : [],
   );
 
   // Listen to OS theme preference when themeMode is 'system'
@@ -67,6 +97,8 @@ export function LkProvider({ children }: { children: React.ReactNode }) {
 
   const resolvedTheme: 'dark' | 'light' =
     settings.themeMode === 'system' ? systemTheme : settings.themeMode;
+
+  const dictionary = useMemo(() => getLkDictionary(settings.language), [settings.language]);
 
   // Apply live CSS custom properties and root classes whenever settings or resolvedTheme change
   useEffect(() => {
@@ -140,14 +172,21 @@ export function LkProvider({ children }: { children: React.ReactNode }) {
     root.style.setProperty('--lk-focus-ring-width', settings.enhancedFocusRings ? '2.5px' : '1.5px');
     root.lang = settings.language;
 
-    saveLkSettings(settings);
-    setStorageStats(getLkStorageStats());
-  }, [settings, resolvedTheme]);
+    if (manageDocumentTitle) {
+      document.title = dictionary.meta.pageTitle;
+    }
+
+    if (persistSettings) {
+      saveLkSettings(settings, storagePrefix);
+      setStorageStats(getLkStorageStats(storagePrefix));
+    }
+  }, [settings, resolvedTheme, dictionary, manageDocumentTitle, persistSettings, storagePrefix]);
 
   const refreshStorageStats = useCallback(() => {
-    setStorageStats(getLkStorageStats());
-    setActivityLog(getLkActivityHistory());
-  }, []);
+    if (!persistSettings) return;
+    setStorageStats(getLkStorageStats(storagePrefix));
+    setActivityLog(getLkActivityHistory(storagePrefix));
+  }, [persistSettings, storagePrefix]);
 
   const dismissToast = useCallback((id: string) => {
     setToasts((prev) => prev.filter((item) => item.id !== id));
@@ -171,23 +210,29 @@ export function LkProvider({ children }: { children: React.ReactNode }) {
     (patch: Partial<LkSettings>, activityLabel?: string) => {
       setSettings((prev) => {
         const next = { ...prev, ...patch };
-        if (activityLabel) {
-          recordLkActivity(activityLabel, next.storeUsageHistory);
+        if (activityLabel && persistSettings) {
+          recordLkActivity(activityLabel, next.storeUsageHistory, storagePrefix);
         }
         return next;
       });
-      setTimeout(() => {
-        setActivityLog(getLkActivityHistory());
-        setStorageStats(getLkStorageStats());
-      }, 0);
+      if (persistSettings) {
+        setTimeout(() => {
+          setActivityLog(getLkActivityHistory(storagePrefix));
+          setStorageStats(getLkStorageStats(storagePrefix));
+        }, 0);
+      }
     },
-    [],
+    [persistSettings, storagePrefix],
   );
 
   const applyThemePreset = useCallback(
     (presetId: LkThemePresetId) => {
       const preset = LK_THEME_PRESETS.find((p) => p.id === presetId);
       if (!preset) return;
+      const presetMeta = presetId !== 'custom' ? dictionary.presets[presetId] : undefined;
+      const presetName = presetMeta?.name ?? preset.name;
+      const modeLabel =
+        preset.recommendedMode === 'dark' ? dictionary.common.dark : dictionary.common.light;
       updateSettings(
         {
           themePreset: preset.id,
@@ -196,54 +241,66 @@ export function LkProvider({ children }: { children: React.ReactNode }) {
           customDarkBg: preset.darkBg,
           customLightBg: preset.lightBg,
         },
-        `Applied preset: ${preset.name}`,
+        `${presetName} (${modeLabel.toLowerCase()})`,
       );
       notify({
-        title: `${preset.name} active`,
-        description: `Switched to ${preset.recommendedMode} profile with ${preset.accent} accent.`,
+        title: dictionary.notifications.presetAppliedTitle(presetName),
+        description: dictionary.notifications.presetAppliedDesc(modeLabel.toLowerCase(), preset.accent),
         variant: 'success',
       });
     },
-    [updateSettings, notify],
+    [updateSettings, notify, dictionary],
   );
 
   const resetSettings = useCallback(() => {
-    clearLkStorage();
-    setSettings({ ...DEFAULT_LK_SETTINGS });
+    if (persistSettings) {
+      clearLkStorage(storagePrefix);
+    }
+    setSettings({ ...mergedDefaults });
     setActivityLog([]);
-    setStorageStats(getLkStorageStats());
+    setStorageStats(
+      persistSettings
+        ? getLkStorageStats(storagePrefix)
+        : { totalBytes: 0, settingsBytes: 0, historyBytes: 0, keyCount: 0, lastSavedAt: null },
+    );
+    const nextDict = getLkDictionary(mergedDefaults.language);
     notify({
-      title: 'Preferences reset',
-      description: 'Restored default LK Hybrid Glass configuration.',
+      title: nextDict.notifications.resetTitle,
+      description: nextDict.notifications.resetDesc,
       variant: 'info',
     });
-  }, [notify]);
+  }, [notify, persistSettings, storagePrefix, mergedDefaults]);
 
   const importSettingsJson = useCallback(
     (jsonText: string) => {
       const parsed = parseLkSettingsJson(jsonText);
       if (!parsed.ok) {
         notify({
-          title: 'Import failed',
+          title: dictionary.notifications.importFailedTitle,
           description: parsed.error,
           variant: 'error',
         });
         return { ok: false, error: parsed.error };
       }
+      const targetDict = getLkDictionary(parsed.data.language);
       setSettings(parsed.data);
-      recordLkActivity('Imported configuration JSON', parsed.data.storeUsageHistory);
-      setActivityLog(getLkActivityHistory());
+      if (persistSettings) {
+        recordLkActivity(
+          targetDict.notifications.importSuccessTitle,
+          parsed.data.storeUsageHistory,
+          storagePrefix,
+        );
+        setActivityLog(getLkActivityHistory(storagePrefix));
+      }
       notify({
-        title: 'Configuration imported',
-        description: 'All LK Core preferences were validated and applied.',
+        title: targetDict.notifications.importSuccessTitle,
+        description: targetDict.notifications.importSuccessDesc,
         variant: 'success',
       });
       return { ok: true };
     },
-    [notify],
+    [notify, dictionary, persistSettings, storagePrefix],
   );
-
-  const dictionary = LK_TRANSLATIONS[settings.language] ?? LK_TRANSLATIONS.en;
 
   const value = useMemo<LkContextValue>(
     () => ({
@@ -253,6 +310,7 @@ export function LkProvider({ children }: { children: React.ReactNode }) {
       toasts,
       storageStats,
       activityLog,
+      storagePrefix,
       updateSettings,
       applyThemePreset,
       resetSettings,
@@ -268,6 +326,7 @@ export function LkProvider({ children }: { children: React.ReactNode }) {
       toasts,
       storageStats,
       activityLog,
+      storagePrefix,
       updateSettings,
       applyThemePreset,
       resetSettings,
@@ -279,6 +338,10 @@ export function LkProvider({ children }: { children: React.ReactNode }) {
   );
 
   return <LkCoreContext.Provider value={value}>{children}</LkCoreContext.Provider>;
+}
+
+export function useLkCoreOptional(): LkContextValue | null {
+  return useContext(LkCoreContext);
 }
 
 export function useLkCore(): LkContextValue {
@@ -309,6 +372,7 @@ export function useLkSettings() {
     importSettingsJson,
     storageStats,
     activityLog,
+    storagePrefix,
   } = useLkCore();
   return {
     settings,
@@ -317,6 +381,7 @@ export function useLkSettings() {
     importSettingsJson,
     storageStats,
     activityLog,
+    storagePrefix,
   };
 }
 

@@ -5,7 +5,6 @@ import {
   LkButton,
   LkCard,
   LkDialog,
-  LkInput,
   LkSegmentedControl,
   LkSelect,
   LkSlider,
@@ -43,8 +42,8 @@ export function SettingsCenterView() {
     link.click();
     URL.revokeObjectURL(url);
     notify({
-      title: 'Preferences exported',
-      description: 'Saved lk-core-preferences.json locally.',
+      title: dictionary.notifications.prefsExportedTitle,
+      description: dictionary.notifications.prefsExportedDesc,
       variant: 'success',
     });
   };
@@ -58,6 +57,15 @@ export function SettingsCenterView() {
   };
 
   const h = dictionary.settingsHeaders;
+  const s = dictionary.settings;
+  const resolvedModeLabel =
+    resolvedTheme === 'dark' ? dictionary.common.dark : dictionary.common.light;
+  const settingModeLabel =
+    settings.themeMode === 'dark'
+      ? dictionary.common.dark
+      : settings.themeMode === 'light'
+        ? dictionary.common.light
+        : dictionary.common.system;
 
   return (
     <div className="flex flex-col gap-6">
@@ -72,7 +80,7 @@ export function SettingsCenterView() {
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <LkButton size="sm" variant="secondary" leftIcon="Download" onClick={handleExportSettings}>
-            Export
+            {dictionary.common.exportBtn}
           </LkButton>
           <LkButton
             size="sm"
@@ -87,34 +95,34 @@ export function SettingsCenterView() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* 1. Appearance */}
-        <LkCard title={h.appearance} subtitle="Control dark, light, or OS-synchronized themes.">
+        <LkCard title={h.appearance} subtitle={s.appearanceSub}>
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between gap-4 flex-wrap">
               <span className="text-sm font-medium" style={{ color: 'var(--lk-text)' }}>
-                Color Mode
+                {s.colorMode}
               </span>
               <LkSegmentedControl
-                ariaLabel="Appearance color mode"
+                ariaLabel={s.colorMode}
                 value={settings.themeMode}
-                onChange={(val) => updateSettings({ themeMode: val }, `Color mode set to ${val}`)}
+                onChange={(val) => updateSettings({ themeMode: val }, `${s.colorMode}: ${val}`)}
                 options={[
-                  { value: 'dark', label: 'Dark' },
-                  { value: 'light', label: 'Light' },
-                  { value: 'system', label: 'System' },
+                  { value: 'dark', label: dictionary.common.dark },
+                  { value: 'light', label: dictionary.common.light },
+                  { value: 'system', label: dictionary.common.system },
                 ]}
               />
             </div>
             <LkSwitch
-              label="High Contrast Borders"
-              description="Increase hairline border visibility and focus outline thickness."
+              label={s.highContrast}
+              description={s.highContrastDesc}
               checked={settings.highContrast}
               onChange={(val) =>
-                updateSettings({ highContrast: val }, `High contrast ${val ? 'on' : 'off'}`)
+                updateSettings({ highContrast: val }, `${s.highContrast}: ${val ? 'on' : 'off'}`)
               }
             />
             <LkSwitch
-              label="Enhanced Focus Rings"
-              description="Keep strong keyboard focus indicators across interactive elements."
+              label={s.enhancedFocus}
+              description={s.enhancedFocusDesc}
               checked={settings.enhancedFocusRings}
               onChange={(val) => updateSettings({ enhancedFocusRings: val })}
             />
@@ -122,13 +130,10 @@ export function SettingsCenterView() {
         </LkCard>
 
         {/* 2. Theme Customization & 3. Accent Colors */}
-        <LkCard
-          title={`${h.themeCustom} & ${h.accent}`}
-          subtitle="Select a curated LK preset or bind any custom hex accent."
-        >
+        <LkCard title={`${h.themeCustom} & ${h.accent}`} subtitle={s.themeAccentSub}>
           <div className="flex flex-col gap-4">
             <LkSelect
-              label="Theme Preset"
+              label={s.themePreset}
               value={settings.themePreset}
               onChange={(val) => {
                 if (val === 'custom') {
@@ -138,28 +143,35 @@ export function SettingsCenterView() {
                 }
               }}
               options={[
-                ...LK_THEME_PRESETS.map((p) => ({ value: p.id, label: p.name })),
-                { value: 'custom', label: 'Custom User Theme' },
+                ...LK_THEME_PRESETS.map((p) => ({
+                  value: p.id,
+                  label:
+                    p.id !== 'custom'
+                      ? (dictionary.presets[p.id]?.name ?? p.name)
+                      : s.customThemeOption,
+                })),
+                { value: 'custom', label: s.customThemeOption },
               ]}
             />
             <div>
               <p className="text-xs font-medium mb-2" style={{ color: 'var(--lk-text-secondary)' }}>
-                Quick Accent Swatches
+                {s.quickSwatches}
               </p>
               <div className="flex flex-wrap items-center gap-2">
                 {LK_ACCENT_SWATCHES.map((sw) => {
                   const active = settings.accentColor.toUpperCase() === sw.hex.toUpperCase();
+                  const swName = dictionary.accentNames[sw.id] ?? sw.name;
                   return (
                     <button
                       key={sw.id}
                       type="button"
-                      aria-label={`Select ${sw.name} accent`}
+                      aria-label={`${h.accent}: ${swName}`}
                       aria-pressed={active}
                       onClick={() => {
                         setCustomHex(sw.hex);
                         updateSettings(
                           { accentColor: sw.hex, themePreset: 'custom' },
-                          `Accent changed to ${sw.name}`,
+                          `${h.accent}: ${swName}`,
                         );
                       }}
                       className="w-8 h-8 rounded-full border-2 cursor-pointer transition-transform hover:scale-105 lk-focus-ring"
@@ -173,7 +185,7 @@ export function SettingsCenterView() {
                 <div className="flex items-center gap-2 ml-auto">
                   <input
                     type="color"
-                    aria-label="Custom accent color picker"
+                    aria-label={s.accentPickerAria}
                     value={normalizeHex(customHex)}
                     onChange={(e) => {
                       const val = e.target.value.toUpperCase();
@@ -193,21 +205,18 @@ export function SettingsCenterView() {
         </LkCard>
 
         {/* 4. Glass Effects & 5. Blur Intensity */}
-        <LkCard
-          title={h.glass}
-          subtitle="Tune Liquid Glass backdrop blur, surface translucency, and specular edges."
-        >
+        <LkCard title={h.glass} subtitle={s.glassSub}>
           <div className="flex flex-col gap-4">
             <LkSwitch
-              label="Enable LK Hybrid Glass"
-              description="Disable for opaque low-power solid surfaces."
+              label={s.enableGlass}
+              description={s.enableGlassDesc}
               checked={settings.glassEnabled}
               onChange={(val) =>
-                updateSettings({ glassEnabled: val }, `Glass effects ${val ? 'enabled' : 'disabled'}`)
+                updateSettings({ glassEnabled: val }, `${s.enableGlass}: ${val ? 'on' : 'off'}`)
               }
             />
             <LkSlider
-              label="Blur Intensity"
+              label={s.blurIntensity}
               min={0}
               max={32}
               unit="px"
@@ -215,7 +224,7 @@ export function SettingsCenterView() {
               onChange={(val) => updateSettings({ blurIntensity: val })}
             />
             <LkSlider
-              label="Surface Opacity"
+              label={s.surfaceOpacity}
               min={0.35}
               max={0.95}
               step={0.05}
@@ -224,8 +233,8 @@ export function SettingsCenterView() {
               onChange={(val) => updateSettings({ glassOpacity: val })}
             />
             <LkSwitch
-              label="Specular Top Rim"
-              description="Subtle top-edge refraction highlight inspired by physical glass."
+              label={s.specularRim}
+              description={s.specularRimDesc}
               checked={settings.specularHighlight}
               onChange={(val) => updateSettings({ specularHighlight: val })}
             />
@@ -233,38 +242,35 @@ export function SettingsCenterView() {
         </LkCard>
 
         {/* 6. Animation Preferences */}
-        <LkCard
-          title={h.motion}
-          subtitle="Control LK Motion fidelity, spring speed, and reduced-motion accessibility."
-        >
+        <LkCard title={h.motion} subtitle={s.motionSub}>
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between gap-4 flex-wrap">
               <span className="text-sm font-medium" style={{ color: 'var(--lk-text)' }}>
-                Motion Level
+                {s.motionLevel}
               </span>
               <LkSegmentedControl
-                ariaLabel="Animation motion level"
+                ariaLabel={s.motionLevel}
                 value={settings.motionLevel}
-                onChange={(val) => updateSettings({ motionLevel: val }, `Motion level: ${val}`)}
+                onChange={(val) => updateSettings({ motionLevel: val }, `${s.motionLevel}: ${val}`)}
                 options={[
-                  { value: 'full', label: 'Full' },
-                  { value: 'subtle', label: 'Subtle' },
-                  { value: 'reduced', label: 'Reduced' },
+                  { value: 'full', label: s.motionFull },
+                  { value: 'subtle', label: s.motionSubtle },
+                  { value: 'reduced', label: s.motionReduced },
                 ]}
               />
             </div>
             <div className="flex items-center justify-between gap-4 flex-wrap">
               <span className="text-sm font-medium" style={{ color: 'var(--lk-text)' }}>
-                Transition Speed
+                {s.transitionSpeed}
               </span>
               <LkSegmentedControl
-                ariaLabel="Animation speed multiplier"
+                ariaLabel={s.transitionSpeed}
                 value={String(settings.motionSpeed)}
                 onChange={(val) => updateSettings({ motionSpeed: Number(val) as 0.5 | 1 | 1.5 })}
                 options={[
-                  { value: '0.5', label: '0.5x Relaxed' },
-                  { value: '1', label: '1.0x Standard' },
-                  { value: '1.5', label: '1.5x Snappy' },
+                  { value: '0.5', label: s.speedSlow },
+                  { value: '1', label: s.speedNormal },
+                  { value: '1.5', label: s.speedFast },
                 ]}
               />
             </div>
@@ -272,48 +278,45 @@ export function SettingsCenterView() {
         </LkCard>
 
         {/* 7. Typography & 8. Interface Density */}
-        <LkCard
-          title={`${h.typography} & ${h.density}`}
-          subtitle="Adjust root font sizing, font pairing, and spacing rhythm across the UI."
-        >
+        <LkCard title={`${h.typography} & ${h.density}`} subtitle={s.typoDensitySub}>
           <div className="flex flex-col gap-4">
             <LkSelect
-              label="Font Family Pairing"
+              label={s.fontPairing}
               value={settings.fontFamily}
-              onChange={(val) => updateSettings({ fontFamily: val }, `Font family: ${val}`)}
+              onChange={(val) => updateSettings({ fontFamily: val }, `${s.fontPairing}: ${val}`)}
               options={[
-                { value: 'jakarta', label: 'Plus Jakarta Sans + JetBrains Mono' },
-                { value: 'manrope', label: 'Manrope + JetBrains Mono' },
-                { value: 'system', label: 'Native System UI' },
+                { value: 'jakarta', label: s.fontOptions.jakarta },
+                { value: 'manrope', label: s.fontOptions.manrope },
+                { value: 'system', label: s.fontOptions.system },
               ]}
             />
             <div className="flex items-center justify-between gap-4 flex-wrap">
               <span className="text-sm font-medium" style={{ color: 'var(--lk-text)' }}>
-                Font Scale
+                {s.fontScale}
               </span>
               <LkSegmentedControl
-                ariaLabel="Typography scale"
+                ariaLabel={s.fontScale}
                 value={settings.fontScale}
-                onChange={(val) => updateSettings({ fontScale: val }, `Font scale: ${val}`)}
+                onChange={(val) => updateSettings({ fontScale: val }, `${s.fontScale}: ${val}`)}
                 options={[
-                  { value: 'compact', label: '14px Compact' },
-                  { value: 'standard', label: '16px Standard' },
-                  { value: 'large', label: '18px Large' },
+                  { value: 'compact', label: s.fontScaleOptions.compact },
+                  { value: 'standard', label: s.fontScaleOptions.standard },
+                  { value: 'large', label: s.fontScaleOptions.large },
                 ]}
               />
             </div>
             <div className="flex items-center justify-between gap-4 flex-wrap">
               <span className="text-sm font-medium" style={{ color: 'var(--lk-text)' }}>
-                Interface Density
+                {s.interfaceDensity}
               </span>
               <LkSegmentedControl
-                ariaLabel="Interface density"
+                ariaLabel={s.interfaceDensity}
                 value={settings.density}
-                onChange={(val) => updateSettings({ density: val }, `Density: ${val}`)}
+                onChange={(val) => updateSettings({ density: val }, `${s.interfaceDensity}: ${val}`)}
                 options={[
-                  { value: 'compact', label: 'Compact' },
-                  { value: 'comfortable', label: 'Comfortable' },
-                  { value: 'spacious', label: 'Spacious' },
+                  { value: 'compact', label: dictionary.common.compact },
+                  { value: 'comfortable', label: dictionary.common.comfortable },
+                  { value: 'spacious', label: dictionary.common.spacious },
                 ]}
               />
             </div>
@@ -321,76 +324,77 @@ export function SettingsCenterView() {
         </LkCard>
 
         {/* 9. Notifications & 10. Language and Regional */}
-        <LkCard
-          title={`${h.notifications} & ${h.language}`}
-          subtitle="Manage real-time toast delivery, interface language, and regional formatting."
-        >
+        <LkCard title={`${h.notifications} & ${h.language}`} subtitle={s.notifLangSub}>
           <div className="flex flex-col gap-4">
             <LkSwitch
-              label="In-App Notifications"
-              description="Allow LK Core components to dispatch toast notifications."
+              label={s.inAppNotif}
+              description={s.inAppNotifDesc}
               checked={settings.notificationsEnabled}
               onChange={(val) => updateSettings({ notificationsEnabled: val })}
             />
             <LkSwitch
-              label="Quiet Mode (Suppress Info Alerts)"
-              description="Only surface warnings, errors, and explicit confirmations."
+              label={s.quietMode}
+              description={s.quietModeDesc}
               checked={settings.quietMode}
               onChange={(val) => updateSettings({ quietMode: val })}
             />
+            <LkSwitch
+              label={s.visualCues}
+              description={s.visualCuesDesc}
+              checked={settings.visualCuesEnabled}
+              onChange={(val) => updateSettings({ visualCuesEnabled: val })}
+            />
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
               <LkSelect
-                label="Language"
+                label={s.languageLabel}
                 value={settings.language}
-                onChange={(val) => updateSettings({ language: val }, `Language set to ${val}`)}
+                onChange={(val) => updateSettings({ language: val }, `${s.languageLabel}: ${val}`)}
                 options={[
+                  { value: 'fr', label: 'Français' },
                   { value: 'en', label: 'English' },
                   { value: 'es', label: 'Español' },
-                  { value: 'fr', label: 'Français' },
                   { value: 'de', label: 'Deutsch' },
                 ]}
               />
               <LkSelect
-                label="Time Format"
+                label={s.timeFormatLabel}
                 value={settings.timeFormat}
                 onChange={(val) => updateSettings({ timeFormat: val })}
                 options={[
-                  { value: '24h', label: '24-Hour' },
-                  { value: '12h', label: '12-Hour' },
+                  { value: '24h', label: s.time24 },
+                  { value: '12h', label: s.time12 },
                 ]}
               />
               <LkSelect
-                label="Number Format"
+                label={s.numberFormatLabel}
                 value={settings.numberFormat}
                 onChange={(val) => updateSettings({ numberFormat: val })}
                 options={[
-                  { value: 'US', label: '1,234.56 (US)' },
-                  { value: 'EU', label: '1.234,56 (EU)' },
+                  { value: 'US', label: s.numUs },
+                  { value: 'EU', label: s.numEu },
                 ]}
               />
             </div>
             <p className="text-xs font-mono tabular-nums" style={{ color: 'var(--lk-text-muted)' }}>
-              Preview: {formatLkDateTime(new Date(), settings.language, settings.timeFormat)} ·{' '}
+              {s.regionalPreview} :{' '}
+              {formatLkDateTime(new Date(), settings.language, settings.timeFormat)} ·{' '}
               {formatLkNumber(12450.75, settings.numberFormat)}
             </p>
           </div>
         </LkCard>
 
         {/* 11. Privacy & 12. Storage Information */}
-        <LkCard
-          title={`${h.privacy} & ${h.storage}`}
-          subtitle="All settings reside strictly in your browser localStorage."
-        >
+        <LkCard title={`${h.privacy} & ${h.storage}`} subtitle={s.privacyStorageSub}>
           <div className="flex flex-col gap-4">
             <LkSwitch
-              label="Strict Local-Only Mode"
-              description="Guarantee zero outbound telemetry or external network requests."
+              label={s.localOnly}
+              description={s.localOnlyDesc}
               checked={settings.localOnlyMode}
               onChange={(val) => updateSettings({ localOnlyMode: val })}
             />
             <LkSwitch
-              label="Record Local Change Log"
-              description="Keep the last 12 setting updates locally for diagnostics."
+              label={s.recordHistory}
+              description={s.recordHistoryDesc}
               checked={settings.storeUsageHistory}
               onChange={(val) => updateSettings({ storeUsageHistory: val })}
             />
@@ -400,21 +404,21 @@ export function SettingsCenterView() {
               style={{ borderColor: 'var(--lk-border)' }}
             >
               <div>
-                <p style={{ color: 'var(--lk-text-muted)' }}>Total Used</p>
+                <p style={{ color: 'var(--lk-text-muted)' }}>{s.totalUsed}</p>
                 <p className="font-mono tabular-nums font-semibold mt-0.5" style={{ color: 'var(--lk-text)' }}>
-                  {formatLkNumber(storageStats.totalBytes, settings.numberFormat)} B
+                  {formatLkNumber(storageStats.totalBytes, settings.numberFormat)} o
                 </p>
               </div>
               <div>
-                <p style={{ color: 'var(--lk-text-muted)' }}>Settings Payload</p>
+                <p style={{ color: 'var(--lk-text-muted)' }}>{s.settingsPayload}</p>
                 <p className="font-mono tabular-nums font-semibold mt-0.5" style={{ color: 'var(--lk-text)' }}>
-                  {formatLkNumber(storageStats.settingsBytes, settings.numberFormat)} B
+                  {formatLkNumber(storageStats.settingsBytes, settings.numberFormat)} o
                 </p>
               </div>
               <div>
-                <p style={{ color: 'var(--lk-text-muted)' }}>Storage Keys</p>
+                <p style={{ color: 'var(--lk-text-muted)' }}>{s.storageKeys}</p>
                 <p className="font-mono tabular-nums font-semibold mt-0.5" style={{ color: 'var(--lk-text)' }}>
-                  {storageStats.keyCount} active
+                  {storageStats.keyCount} {s.activeKeysSuffix}
                 </p>
               </div>
             </div>
@@ -426,7 +430,7 @@ export function SettingsCenterView() {
                 accept="application/json"
                 onChange={handleImportFile}
                 className="hidden"
-                aria-label="Import preferences JSON file"
+                aria-label={s.importJson}
               />
               <LkButton
                 size="sm"
@@ -434,7 +438,7 @@ export function SettingsCenterView() {
                 leftIcon="Upload"
                 onClick={() => fileInputRef.current?.click()}
               >
-                Import JSON
+                {s.importJson}
               </LkButton>
               <LkButton
                 size="sm"
@@ -442,28 +446,29 @@ export function SettingsCenterView() {
                 leftIcon="Download"
                 onClick={handleExportSettings}
               >
-                Download JSON
+                {s.downloadJson}
               </LkButton>
             </div>
           </div>
         </LkCard>
 
         {/* 13. Application Information */}
-        <LkCard
-          title={h.appInfo}
-          subtitle="Runtime diagnostics, active token specification, and recent local events."
-        >
+        <LkCard title={h.appInfo} subtitle={s.appInfoSub}>
           <div className="divide-y text-xs" style={{ borderColor: 'var(--lk-border)' }}>
             {[
-              { label: 'Library Package', value: 'LK Core 1.0.0' },
-              { label: 'Design Language', value: 'LK Hybrid Glass' },
-              { label: 'Resolved Theme', value: `${resolvedTheme} (${settings.themeMode})` },
-              { label: 'Persistence Engine', value: 'LocalStorage (lk_core_preferences_v1)' },
+              { label: s.infoRows.packageLabel, value: 'LK Core 1.0.0' },
+              { label: s.infoRows.designLabel, value: s.infoRows.designValue },
+              { label: s.infoRows.resolvedLabel, value: `${resolvedModeLabel} (${settingModeLabel})` },
+              { label: s.infoRows.persistenceLabel, value: s.infoRows.persistenceValue },
               {
-                label: 'Last Saved',
+                label: s.infoRows.lastSavedLabel,
                 value: storageStats.lastSavedAt
-                  ? formatLkDateTime(new Date(storageStats.lastSavedAt), settings.language, settings.timeFormat)
-                  : 'Just initialized',
+                  ? formatLkDateTime(
+                      new Date(storageStats.lastSavedAt),
+                      settings.language,
+                      settings.timeFormat,
+                    )
+                  : s.infoRows.justInitialized,
               },
             ].map((row) => (
               <div
@@ -482,7 +487,7 @@ export function SettingsCenterView() {
           {activityLog.length > 0 && (
             <div className="mt-4 pt-3 border-t" style={{ borderColor: 'var(--lk-border)' }}>
               <p className="text-xs font-medium mb-2" style={{ color: 'var(--lk-text-secondary)' }}>
-                Recent Local Preference Events
+                {s.recentEvents}
               </p>
               <ul className="space-y-1 text-xs" style={{ color: 'var(--lk-text-muted)' }}>
                 {activityLog.slice(0, 4).map((entry, idx) => (
@@ -502,8 +507,9 @@ export function SettingsCenterView() {
       <LkDialog
         open={resetConfirmOpen}
         onClose={() => setResetConfirmOpen(false)}
-        title="Reset all LK Core preferences?"
-        description="This clears stored theme, glass, typography, and regional preferences and restores Obsidian Gold defaults."
+        title={s.resetDialogTitle}
+        description={s.resetDialogDesc}
+        closeLabel={dictionary.common.closeDialog}
         footer={
           <>
             <LkButton variant="ghost" onClick={() => setResetConfirmOpen(false)}>
@@ -516,12 +522,12 @@ export function SettingsCenterView() {
                 setResetConfirmOpen(false);
               }}
             >
-              Confirm Reset
+              {s.resetConfirmBtn}
             </LkButton>
           </>
         }
       >
-        <p>Your local storage keys will be removed and re-initialized cleanly.</p>
+        <p>{s.resetDialogBody}</p>
       </LkDialog>
     </div>
   );

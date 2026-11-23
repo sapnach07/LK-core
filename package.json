@@ -1,36 +1,133 @@
 {
-  "name": "react-example",
-  "private": true,
-  "version": "0.0.0",
+  "name": "@lk/core",
+  "private": false,
+  "version": "1.0.0",
+  "description": "LK Core 1.0 — Système de design modulaire React & TypeScript (LK Hybrid Glass, Thèmes, Paramètres, Motion, Accessibilité et LK Charts)",
+  "license": "Apache-2.0",
+  "keywords": [
+    "lk-core",
+    "design-system",
+    "lk-hybrid-glass",
+    "react",
+    "typescript",
+    "themes",
+    "charts"
+  ],
+  "engines": {
+    "node": ">=18.18.0"
+  },
   "type": "module",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "style": "./dist/styles.css",
+  "files": [
+    "dist",
+    "!dist/index.html",
+    "!dist/assets",
+    "!dist/src",
+    "README.md",
+    "docs"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./charts": {
+      "types": "./dist/charts/index.d.ts",
+      "import": "./dist/charts.js"
+    },
+    "./design": {
+      "types": "./dist/design/index.d.ts",
+      "import": "./dist/design.js"
+    },
+    "./themes": {
+      "types": "./dist/themes/index.d.ts",
+      "import": "./dist/themes.js"
+    },
+    "./glass": {
+      "types": "./dist/glass/index.d.ts",
+      "import": "./dist/glass.js"
+    },
+    "./motion": {
+      "types": "./dist/motion/index.d.ts",
+      "import": "./dist/motion.js"
+    },
+    "./icons": {
+      "types": "./dist/icons/index.d.ts",
+      "import": "./dist/icons.js"
+    },
+    "./settings": {
+      "types": "./dist/settings/index.d.ts",
+      "import": "./dist/settings.js"
+    },
+    "./storage": {
+      "types": "./dist/storage/index.d.ts",
+      "import": "./dist/storage.js"
+    },
+    "./accessibility": {
+      "types": "./dist/accessibility/index.d.ts",
+      "import": "./dist/accessibility.js"
+    },
+    "./platform": {
+      "types": "./dist/platform/index.d.ts",
+      "import": "./dist/platform.js"
+    },
+    "./styles.css": {
+      "types": "./dist/styles.css.d.ts",
+      "style": "./dist/styles.css",
+      "default": "./dist/styles.css"
+    },
+    "./tokens.css": {
+      "types": "./dist/tokens.css.d.ts",
+      "style": "./dist/tokens.css",
+      "default": "./dist/tokens.css"
+    },
+    "./package.json": "./package.json"
+  },
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
-    "build": "vite build",
+    "build": "npm run build:playground && npm run build:lib",
+    "build:playground": "vite build",
+    "build:lib": "rm -rf dist/chunks && vite build --config vite.lib.config.ts && tsc -p tsconfig.lib.json",
+    "verify:exports": "node scripts/verify-exports.mjs",
+    "prepublishOnly": "npm test && npm run lint && npm run build:lib && npm run verify:exports",
+    "test": "tsx --test src/lk-core/*.test.ts src/lk-core/**/*.test.ts",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit"
   },
+  "peerDependencies": {
+    "react": "^18.2.0 || ^19.0.0",
+    "react-dom": "^18.2.0 || ^19.0.0"
+  },
   "dependencies": {
-    "@google/genai": "^2.4.0",
-    "@tailwindcss/vite": "^4.3.3",
-    "@vitejs/plugin-react": "^6.1.1",
     "lucide-react": "^0.546.0",
-    "react": "^19.0.1",
-    "react-dom": "^19.0.1",
-    "vite": "^8.3.0",
-    "express": "^4.21.2",
-    "dotenv": "^17.2.3",
-    "motion": "^12.23.24"
+    "react-is": "^19.3.1",
+    "recharts": "^3.11.0"
   },
   "devDependencies": {
+    "@google/genai": "^2.4.0",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/express": "^4.17.21",
     "@types/node": "^22.14.0",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
     "autoprefixer": "^10.4.21",
+    "dotenv": "^17.2.3",
     "esbuild": "^0.25.0",
+    "express": "^4.21.2",
+    "motion": "^12.23.24",
+    "react": "^19.0.1",
+    "react-dom": "^19.0.1",
     "tailwindcss": "^4.3.3",
     "tsx": "^4.21.0",
     "typescript": "^7.0.2",
-    "@types/express": "^4.17.21"
+    "vite": "^8.3.0"
   }
 }

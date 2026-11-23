@@ -12,7 +12,9 @@ import {
 } from '../../lk-core';
 
 export function IconGalleryView() {
-  const { notify } = useLkCore();
+  const { notify, dictionary } = useLkCore();
+  const g = dictionary.iconGallery;
+
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState<'All' | LkIconMeta['category']>('All');
   const [iconSize, setIconSize] = useState(20);
@@ -32,7 +34,7 @@ export function IconGalleryView() {
     try {
       await navigator.clipboard.writeText(snippet);
       notify({
-        title: `Copied ${name}`,
+        title: dictionary.notifications.copiedSnippetTitle(name),
         description: snippet,
         variant: 'success',
       });
@@ -49,10 +51,10 @@ export function IconGalleryView() {
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--lk-text)' }}>
-          LK Icon System
+          {g.title}
         </h1>
         <p className="text-sm mt-1" style={{ color: 'var(--lk-text-secondary)' }}>
-          Standardized stroke weights, optical sizing, and click-to-copy TSX usage across all LK apps.
+          {g.subtitle}
         </p>
       </div>
 
@@ -60,16 +62,16 @@ export function IconGalleryView() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
           <div className="lg:col-span-4">
             <LkInput
-              label="Search Icons"
+              label={g.searchLabel}
               leftIcon="Search"
-              placeholder="e.g. Shield, Palette, Bell..."
+              placeholder={g.searchPlaceholder}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
           </div>
           <div className="lg:col-span-4">
             <LkSlider
-              label="Icon Size"
+              label={g.sizeLabel}
               min={14}
               max={32}
               step={2}
@@ -80,7 +82,7 @@ export function IconGalleryView() {
           </div>
           <div className="lg:col-span-4">
             <LkSlider
-              label="Stroke Weight"
+              label={g.strokeLabel}
               min={1.25}
               max={2.5}
               step={0.25}
@@ -92,16 +94,16 @@ export function IconGalleryView() {
 
         <div className="mt-4 pt-4 border-t overflow-x-auto" style={{ borderColor: 'var(--lk-border)' }}>
           <LkSegmentedControl
-            ariaLabel="Filter icons by category"
+            ariaLabel={g.title}
             value={category}
             onChange={setCategory}
             options={[
-              { value: 'All', label: 'All' },
-              { value: 'Navigation', label: 'Navigation' },
-              { value: 'Design', label: 'Design' },
-              { value: 'System', label: 'System' },
-              { value: 'Feedback', label: 'Feedback' },
-              { value: 'Devices', label: 'Devices' },
+              { value: 'All', label: g.categories.All },
+              { value: 'Navigation', label: g.categories.Navigation },
+              { value: 'Design', label: g.categories.Design },
+              { value: 'System', label: g.categories.System },
+              { value: 'Feedback', label: g.categories.Feedback },
+              { value: 'Devices', label: g.categories.Devices },
             ]}
           />
         </div>
@@ -110,7 +112,7 @@ export function IconGalleryView() {
       {filtered.length === 0 ? (
         <LkCard>
           <p className="text-sm text-center py-6" style={{ color: 'var(--lk-text-muted)' }}>
-            No icons match &ldquo;{query}&rdquo;. Clear the search filter to view all icons.
+            {g.emptyState(query)}
           </p>
         </LkCard>
       ) : (
@@ -120,7 +122,7 @@ export function IconGalleryView() {
               key={item.name}
               type="button"
               onClick={() => handleCopyIconSnippet(item.name)}
-              aria-label={`Copy ${item.name} icon snippet`}
+              aria-label={`${dictionary.common.copy} ${item.name}`}
               className="flex flex-col items-center justify-center gap-2.5 p-3.5 rounded-2xl border transition-all hover:brightness-110 cursor-pointer lk-focus-ring"
               style={{
                 backgroundColor: 'var(--lk-surface)',

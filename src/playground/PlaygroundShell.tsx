@@ -13,6 +13,7 @@ import {
 } from '../lk-core';
 import { OverviewView } from './views/OverviewView';
 import { ComponentGalleryView } from './views/ComponentGalleryView';
+import { ChartsLabView } from './views/ChartsLabView';
 import { ThemeEditorView } from './views/ThemeEditorView';
 import { SettingsCenterView } from './views/SettingsCenterView';
 import { GlassLabView } from './views/GlassLabView';
@@ -30,6 +31,7 @@ interface NavEntry {
 const NAV_ITEMS: NavEntry[] = [
   { id: 'overview', icon: 'LayoutDashboard', group: 'foundation' },
   { id: 'components', icon: 'Layers', group: 'foundation' },
+  { id: 'charts', icon: 'BarChart3', group: 'laboratory' },
   { id: 'themes', icon: 'Palette', group: 'foundation' },
   { id: 'glass', icon: 'Wand2', group: 'laboratory' },
   { id: 'motion', icon: 'Zap', group: 'laboratory' },
@@ -50,20 +52,24 @@ export function PlaygroundShell() {
   };
 
   const handleExportTokensDownload = () => {
+    const filename = `lk-core-tokens-${resolvedTheme}.json`;
     const payload = exportTokensAsJson(settings, resolvedTheme);
     const blob = new Blob([payload], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `lk-core-tokens-${resolvedTheme}.json`;
+    a.download = filename;
     a.click();
     URL.revokeObjectURL(url);
     notify({
-      title: 'Tokens exported',
-      description: `Downloaded lk-core-tokens-${resolvedTheme}.json`,
+      title: dictionary.notifications.tokensExportedTitle,
+      description: dictionary.notifications.tokensExportedDesc(filename),
       variant: 'success',
     });
   };
+
+  const modeToggleLabel =
+    resolvedTheme === 'dark' ? dictionary.common.light : dictionary.common.dark;
 
   const renderSidebarContent = () => {
     const groups: Array<'foundation' | 'laboratory' | 'system'> = [
@@ -89,7 +95,7 @@ export function PlaygroundShell() {
           </div>
 
           {/* Navigation Groups */}
-          <nav aria-label="LK Core Playground sections" className="flex flex-col gap-5">
+          <nav aria-label={dictionary.nav.overview} className="flex flex-col gap-5">
             {groups.map((groupKey) => {
               const items = NAV_ITEMS.filter((item) => item.group === groupKey);
               return (
@@ -128,8 +134,10 @@ export function PlaygroundShell() {
 
         {/* Quick Theme Switcher Footer */}
         <div className="pt-4 border-t flex items-center justify-between gap-2 px-1" style={{ borderColor: 'var(--lk-border)' }}>
-          <span className="text-xs capitalize" style={{ color: 'var(--lk-text-muted)' }}>
-            {resolvedTheme} mode
+          <span className="text-xs" style={{ color: 'var(--lk-text-muted)' }}>
+            {resolvedTheme === 'dark'
+              ? dictionary.common.darkModeLabel
+              : dictionary.common.lightModeLabel}
           </span>
           <button
             type="button"
@@ -137,7 +145,7 @@ export function PlaygroundShell() {
             onClick={() =>
               updateSettings(
                 { themeMode: resolvedTheme === 'dark' ? 'light' : 'dark' },
-                `Toggled to ${resolvedTheme === 'dark' ? 'light' : 'dark'} mode`,
+                `${dictionary.actions.toggleTheme}: ${modeToggleLabel}`,
               )
             }
             className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium cursor-pointer ${LK_FOCUS_RING_CLASS}`}
@@ -148,7 +156,7 @@ export function PlaygroundShell() {
             }}
           >
             <LkIcon name={resolvedTheme === 'dark' ? 'Sun' : 'Moon'} size={14} />
-            <span>{resolvedTheme === 'dark' ? 'Light' : 'Dark'}</span>
+            <span>{modeToggleLabel}</span>
           </button>
         </div>
       </div>
@@ -185,7 +193,7 @@ export function PlaygroundShell() {
             <div className="flex justify-end px-4 pt-3">
               <button
                 type="button"
-                aria-label="Close navigation menu"
+                aria-label={dictionary.common.closeMenu}
                 onClick={() => setMobileNavOpen(false)}
                 className={`p-2 rounded-lg cursor-pointer ${LK_FOCUS_RING_CLASS}`}
                 style={{ color: 'var(--lk-text-muted)' }}
@@ -205,7 +213,7 @@ export function PlaygroundShell() {
           <div className="flex items-center gap-3 min-w-0">
             <button
               type="button"
-              aria-label="Open navigation menu"
+              aria-label={dictionary.common.openMenu}
               onClick={() => setMobileNavOpen(true)}
               className={`lg:hidden p-2 rounded-xl border cursor-pointer ${LK_FOCUS_RING_CLASS}`}
               style={{
@@ -237,12 +245,12 @@ export function PlaygroundShell() {
                 onClick={() =>
                   updateSettings(
                     { themeMode: resolvedTheme === 'dark' ? 'light' : 'dark' },
-                    `Toggled theme`,
+                    `${dictionary.actions.toggleTheme}: ${modeToggleLabel}`,
                   )
                 }
                 aria-label={dictionary.actions.toggleTheme}
               >
-                {resolvedTheme === 'dark' ? 'Light' : 'Dark'}
+                {modeToggleLabel}
               </LkButton>
             </div>
             <LkButton
@@ -260,6 +268,7 @@ export function PlaygroundShell() {
         <main className="flex-1 px-4 sm:px-8 py-6 sm:py-8 max-w-[1280px] w-full mx-auto">
           {activeSection === 'overview' && <OverviewView onNavigate={handleSelectSection} />}
           {activeSection === 'components' && <ComponentGalleryView />}
+          {activeSection === 'charts' && <ChartsLabView />}
           {activeSection === 'themes' && <ThemeEditorView />}
           {activeSection === 'settings' && <SettingsCenterView />}
           {activeSection === 'glass' && <GlassLabView />}

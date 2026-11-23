@@ -8,15 +8,10 @@ import {
   useLkMotionConfig,
 } from '../../lk-core';
 
-const SEQUENCE_ITEMS = [
-  { id: '01', title: 'Token Resolution', detail: 'CSS custom properties & Kotlin exports' },
-  { id: '02', title: 'Glass Compositing', detail: 'GPU-friendly transform & opacity transitions' },
-  { id: '03', title: 'Focus Choreography', detail: 'Deterministic keyboard & pointer settling' },
-  { id: '04', title: 'Reduced Motion Safe', detail: 'Instant zero-delay fallback when requested' },
-];
-
 export function MotionLabView() {
-  const { settings, updateSettings } = useLkCore();
+  const { settings, dictionary, updateSettings } = useLkCore();
+  const m = dictionary.motionLab;
+  const s = dictionary.settings;
   const { isReduced, durationMs, springEase, ease } = useLkMotionConfig();
   const [staggerKey, setStaggerKey] = useState(0);
   const [expandedCard, setExpandedCard] = useState(false);
@@ -26,21 +21,21 @@ export function MotionLabView() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--lk-text)' }}>
-            LK Motion Demonstrations
+            {m.title}
           </h1>
           <p className="text-sm mt-1" style={{ color: 'var(--lk-text-secondary)' }}>
-            Physics-driven transitions that strictly honor your global Motion Level and Speed settings.
+            {m.subtitle}
           </p>
         </div>
 
         <LkSegmentedControl
-          ariaLabel="Motion level override"
+          ariaLabel={s.motionLevel}
           value={settings.motionLevel}
-          onChange={(val) => updateSettings({ motionLevel: val }, `Motion level: ${val}`)}
+          onChange={(val) => updateSettings({ motionLevel: val }, `${s.motionLevel}: ${val}`)}
           options={[
-            { value: 'full', label: 'Full' },
-            { value: 'subtle', label: 'Subtle' },
-            { value: 'reduced', label: 'Reduced' },
+            { value: 'full', label: s.motionFull },
+            { value: 'subtle', label: s.motionSubtle },
+            { value: 'reduced', label: s.motionReduced },
           ]}
         />
       </div>
@@ -48,8 +43,8 @@ export function MotionLabView() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Staggered Sequence */}
         <LkCard
-          title="Staggered List Choreography"
-          subtitle={`Current duration: ${durationMs}ms · Speed ${settings.motionSpeed}x`}
+          title={m.staggerTitle}
+          subtitle={m.staggerSub(durationMs, settings.motionSpeed)}
           action={
             <LkButton
               size="sm"
@@ -57,12 +52,12 @@ export function MotionLabView() {
               leftIcon="Play"
               onClick={() => setStaggerKey((k) => k + 1)}
             >
-              Replay
+              {m.replayBtn}
             </LkButton>
           }
         >
           <div key={staggerKey} className="flex flex-col gap-2.5">
-            {SEQUENCE_ITEMS.map((item, idx) => (
+            {m.sequence.map((item, idx) => (
               <div
                 key={item.id}
                 className={`flex items-center justify-between gap-4 p-3 rounded-xl border ${
@@ -81,7 +76,7 @@ export function MotionLabView() {
                 <div className="flex items-center gap-3">
                   <span
                     className="text-xs font-mono tabular-nums font-semibold"
-                    style={{ color: 'var(--lk-accent)' }}
+                    style={{ color: 'var(--lk-accent-ink)' }}
                   >
                     {item.id}
                   </span>
@@ -101,11 +96,11 @@ export function MotionLabView() {
 
         {/* Interactive Spring Surface */}
         <LkCard
-          title="Tactile Spring & State Morph"
-          subtitle="Click or press the interactive surface to test spring settling curves."
+          title={m.springTitle}
+          subtitle={m.springSub}
           action={
             <LkSegmentedControl
-              ariaLabel="Motion speed"
+              ariaLabel={s.transitionSpeed}
               value={String(settings.motionSpeed)}
               onChange={(val) => updateSettings({ motionSpeed: Number(val) as 0.5 | 1 | 1.5 })}
               options={[
@@ -133,12 +128,10 @@ export function MotionLabView() {
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <p className="text-sm font-semibold" style={{ color: 'var(--lk-text)' }}>
-                    Interactive Spring Surface
+                    {m.springSurfaceTitle}
                   </p>
                   <p className="text-xs mt-1" style={{ color: 'var(--lk-text-secondary)' }}>
-                    {expandedCard
-                      ? 'Active state engaged — tap again to settle back.'
-                      : 'Tap to toggle active spring elevation state.'}
+                    {expandedCard ? m.springExpanded : m.springCollapsed}
                   </p>
                 </div>
                 <div
@@ -160,10 +153,10 @@ export function MotionLabView() {
               className="p-3.5 rounded-xl border text-xs leading-relaxed"
               style={{ borderColor: 'var(--lk-border)', color: 'var(--lk-text-secondary)' }}
             >
-              LK Motion animates only compositor properties (<span className="font-mono">transform</span>{' '}
-              and <span className="font-mono">opacity</span>) and automatically collapses durations to{' '}
-              <span className="font-mono tabular-nums">0ms</span> when Motion Level is set to{' '}
-              <span className="font-semibold">Reduced</span>.
+              {m.notePrefix}
+              <span className="font-mono">transform</span> / <span className="font-mono">opacity</span>
+              {m.noteMiddle}
+              <span className="font-mono tabular-nums">0ms</span> ({m.noteReduced}).
             </div>
           </div>
         </LkCard>

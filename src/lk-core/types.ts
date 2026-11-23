@@ -95,6 +95,7 @@ export interface LkStorageStats {
 export type PlaygroundSectionId =
   | 'overview'
   | 'components'
+  | 'charts'
   | 'themes'
   | 'settings'
   | 'glass'

@@ -3,7 +3,7 @@ import { PlaygroundShell } from './playground/PlaygroundShell';
 
 export default function App() {
   return (
-    <LkProvider>
+    <LkProvider manageDocumentTitle>
       <PlaygroundShell />
     </LkProvider>
   );

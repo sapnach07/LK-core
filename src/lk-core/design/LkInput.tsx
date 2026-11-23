@@ -8,6 +8,8 @@ export interface LkInputProps extends React.InputHTMLAttributes<HTMLInputElement
   errorText?: string;
   leftIcon?: LkIconName;
   allowPasswordToggle?: boolean;
+  showPasswordLabel?: string;
+  hidePasswordLabel?: string;
 }
 
 export function LkInput({
@@ -16,6 +18,8 @@ export function LkInput({
   errorText,
   leftIcon,
   allowPasswordToggle = false,
+  showPasswordLabel = 'Afficher le mot de passe',
+  hidePasswordLabel = 'Masquer le mot de passe',
   type = 'text',
   id,
   className = '',
@@ -64,7 +68,7 @@ export function LkInput({
           <button
             type="button"
             onClick={() => setShowPassword((prev) => !prev)}
-            aria-label={showPassword ? 'Hide password' : 'Show password'}
+            aria-label={showPassword ? hidePasswordLabel : showPasswordLabel}
             className={`absolute right-2 p-1.5 rounded-lg cursor-pointer ${LK_FOCUS_RING_CLASS}`}
             style={{ color: 'var(--lk-text-muted)' }}
           >

@@ -6,7 +6,15 @@ import {
   parseLkSettingsJson,
   calculateUtf8Bytes,
 } from './lkStorage';
-import { formatLkNumber } from '../i18n/translations';
+import { formatLkNumber, getLkDictionary } from '../i18n/translations';
+
+test('DEFAULT_LK_SETTINGS defaults to French and getLkDictionary supports fr/en', () => {
+  assert.equal(DEFAULT_LK_SETTINGS.language, 'fr');
+  const fr = getLkDictionary('fr');
+  const en = getLkDictionary('en');
+  assert.equal(fr.nav.overview, 'Vue d’ensemble');
+  assert.equal(en.nav.overview, 'Overview');
+});
 
 test('sanitizeLkSettings clamps invalid numeric bounds and falls back on bad enums', () => {
   const sanitized = sanitizeLkSettings({

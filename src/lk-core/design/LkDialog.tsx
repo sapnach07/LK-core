@@ -11,6 +11,7 @@ export interface LkDialogProps {
   children: React.ReactNode;
   footer?: React.ReactNode;
   maxWidthClass?: string;
+  closeLabel?: string;
 }
 
 export function LkDialog({
@@ -21,6 +22,7 @@ export function LkDialog({
   children,
   footer,
   maxWidthClass = 'max-w-lg',
+  closeLabel = 'Fermer la fenêtre',
 }: LkDialogProps) {
   useEffect(() => {
     if (!open) return;
@@ -65,7 +67,7 @@ export function LkDialog({
             <button
               type="button"
               onClick={onClose}
-              aria-label="Close dialog"
+              aria-label={closeLabel}
               className={`p-2 rounded-xl cursor-pointer transition-colors hover:bg-white/10 ${LK_FOCUS_RING_CLASS}`}
               style={{ color: 'var(--lk-text-muted)' }}
             >

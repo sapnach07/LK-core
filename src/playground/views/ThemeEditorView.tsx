@@ -16,7 +16,10 @@ import {
 } from '../../lk-core';
 
 export function ThemeEditorView() {
-  const { settings, resolvedTheme, updateSettings, applyThemePreset, notify } = useLkCore();
+  const { settings, resolvedTheme, dictionary, updateSettings, applyThemePreset, notify } =
+    useLkCore();
+  const t = dictionary.themes;
+
   const [hexDraft, setHexDraft] = useState(settings.accentColor);
   const [exportFormat, setExportFormat] = useState<'json' | 'css' | 'kotlin'>('json');
 
@@ -40,11 +43,11 @@ export function ThemeEditorView() {
     setHexDraft(normalized);
     updateSettings(
       { accentColor: normalized, themePreset: 'custom' },
-      `Set custom accent ${normalized}`,
+      `${t.customHexLabel}: ${normalized}`,
     );
     notify({
-      title: 'Accent color updated',
-      description: `Applied ${normalized} across all LK Core tokens.`,
+      title: dictionary.notifications.accentUpdatedTitle,
+      description: dictionary.notifications.accentUpdatedDesc(normalized),
       variant: 'success',
     });
   };
@@ -53,14 +56,14 @@ export function ThemeEditorView() {
     try {
       await navigator.clipboard.writeText(exportOutput);
       notify({
-        title: 'Tokens copied',
-        description: `Copied ${exportFormat.toUpperCase()} tokens to clipboard.`,
+        title: dictionary.notifications.tokensCopiedTitle,
+        description: dictionary.notifications.tokensCopiedDesc(exportFormat.toUpperCase()),
         variant: 'success',
       });
     } catch {
       notify({
-        title: 'Clipboard unavailable',
-        description: 'Select the code block directly to copy.',
+        title: dictionary.notifications.clipboardUnavailableTitle,
+        description: dictionary.notifications.clipboardUnavailableDesc,
         variant: 'warning',
       });
     }
@@ -70,19 +73,22 @@ export function ThemeEditorView() {
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--lk-text)' }}>
-          Theme Editor & Token Exporter
+          {t.title}
         </h1>
         <p className="text-sm mt-1" style={{ color: 'var(--lk-text-secondary)' }}>
-          Customize light/dark modes, accent colors, inspect real-time WCAG contrast ratios, and export
-          platform-neutral tokens for React or Android Kotlin.
+          {t.subtitle}
         </p>
       </div>
 
       {/* Presets Grid */}
-      <section aria-label="Theme Presets">
+      <section aria-label={dictionary.settings.themePreset}>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {LK_THEME_PRESETS.map((preset) => {
             const isActive = settings.themePreset === preset.id;
+            const localizedPreset =
+              preset.id !== 'custom' ? dictionary.presets[preset.id] : undefined;
+            const modeText =
+              preset.recommendedMode === 'dark' ? dictionary.common.dark : dictionary.common.light;
             return (
               <button
                 key={preset.id}
@@ -114,15 +120,15 @@ export function ThemeEditorView() {
                       style={{ backgroundColor: preset.lightBg, borderColor: 'var(--lk-border-strong)' }}
                     />
                   </div>
-                  <span className="text-xs font-medium capitalize" style={{ color: 'var(--lk-text-muted)' }}>
-                    {preset.recommendedMode}
+                  <span className="text-xs font-medium" style={{ color: 'var(--lk-text-muted)' }}>
+                    {modeText}
                   </span>
                 </div>
                 <p className="text-sm font-semibold" style={{ color: 'var(--lk-text)' }}>
-                  {preset.name}
+                  {localizedPreset?.name ?? preset.name}
                 </p>
                 <p className="text-xs mt-1 leading-relaxed" style={{ color: 'var(--lk-text-secondary)' }}>
-                  {preset.description}
+                  {localizedPreset?.description ?? preset.description}
                 </p>
               </button>
             );
@@ -134,33 +140,34 @@ export function ThemeEditorView() {
         {/* Accent & Mode Customizer */}
         <LkCard
           className="lg:col-span-5"
-          title="Mode & Accent Controls"
-          subtitle="Changes persist locally and update CSS variables in real time."
+          title={t.modeAccentTitle}
+          subtitle={t.modeAccentSubtitle}
         >
           <div className="flex flex-col gap-5">
             <div>
               <p className="text-xs font-medium mb-2" style={{ color: 'var(--lk-text-secondary)' }}>
-                Color Mode
+                {t.colorModeLabel}
               </p>
               <LkSegmentedControl
-                ariaLabel="Theme mode selector"
+                ariaLabel={t.colorModeLabel}
                 value={settings.themeMode}
-                onChange={(mode) => updateSettings({ themeMode: mode }, `Theme mode: ${mode}`)}
+                onChange={(mode) => updateSettings({ themeMode: mode }, `${t.colorModeLabel}: ${mode}`)}
                 options={[
-                  { value: 'dark', label: 'Dark' },
-                  { value: 'light', label: 'Light' },
-                  { value: 'system', label: 'System' },
+                  { value: 'dark', label: dictionary.common.dark },
+                  { value: 'light', label: dictionary.common.light },
+                  { value: 'system', label: dictionary.common.system },
                 ]}
               />
             </div>
 
             <div>
               <p className="text-xs font-medium mb-2.5" style={{ color: 'var(--lk-text-secondary)' }}>
-                Curated LK Accents
+                {t.curatedAccentsLabel}
               </p>
               <div className="grid grid-cols-3 gap-2">
                 {LK_ACCENT_SWATCHES.map((swatch) => {
                   const selected = settings.accentColor.toUpperCase() === swatch.hex.toUpperCase();
+                  const swatchName = dictionary.accentNames[swatch.id] ?? swatch.name;
                   return (
                     <button
                       key={swatch.id}
@@ -169,7 +176,7 @@ export function ThemeEditorView() {
                         setHexDraft(swatch.hex);
                         updateSettings(
                           { accentColor: swatch.hex, themePreset: 'custom' },
-                          `Accent: ${swatch.name}`,
+                          `${dictionary.settingsHeaders.accent}: ${swatchName}`,
                         );
                       }}
                       className="flex items-center gap-2 p-2 rounded-xl border text-left cursor-pointer lk-focus-ring"
@@ -183,7 +190,7 @@ export function ThemeEditorView() {
                         style={{ backgroundColor: swatch.hex, borderColor: 'rgba(0,0,0,0.2)' }}
                       />
                       <span className="text-xs font-medium truncate" style={{ color: 'var(--lk-text)' }}>
-                        {swatch.name}
+                        {swatchName}
                       </span>
                     </button>
                   );
@@ -194,7 +201,7 @@ export function ThemeEditorView() {
             <div className="flex items-end gap-2">
               <div className="flex-1">
                 <LkInput
-                  label="Custom Accent Hex"
+                  label={t.customHexLabel}
                   value={hexDraft}
                   onChange={(e) => setHexDraft(e.target.value)}
                   placeholder="#D6B56D"
@@ -202,7 +209,7 @@ export function ThemeEditorView() {
               </div>
               <input
                 type="color"
-                aria-label="Pick custom accent color"
+                aria-label={t.colorPickerAria}
                 value={normalizeHex(hexDraft)}
                 onChange={(e) => {
                   const val = e.target.value.toUpperCase();
@@ -213,20 +220,20 @@ export function ThemeEditorView() {
                 style={{ borderColor: 'var(--lk-border-strong)' }}
               />
               <LkButton variant="primary" onClick={handleApplyHex}>
-                Apply
+                {dictionary.common.apply}
               </LkButton>
             </div>
 
             {/* Live WCAG Contrast Matrix */}
             <div className="pt-4 border-t" style={{ borderColor: 'var(--lk-border)' }}>
               <p className="text-xs font-semibold mb-3" style={{ color: 'var(--lk-text)' }}>
-                Real-Time WCAG Accessibility Audit
+                {t.wcagTitle}
               </p>
               <div className="divide-y text-xs" style={{ borderColor: 'var(--lk-border)' }}>
                 {[
-                  { label: 'Primary Text / Canvas', audit: primaryContrast },
-                  { label: 'Button Ink / Accent', audit: accentButtonContrast },
-                  { label: 'Accent Text / Canvas', audit: accentOnBgContrast },
+                  { label: t.wcagRows.primaryCanvas, audit: primaryContrast },
+                  { label: t.wcagRows.buttonAccent, audit: accentButtonContrast },
+                  { label: t.wcagRows.accentCanvas, audit: accentOnBgContrast },
                 ].map((row) => (
                   <div
                     key={row.label}
@@ -238,7 +245,7 @@ export function ThemeEditorView() {
                       className="font-mono tabular-nums font-semibold"
                       style={{ color: row.audit.passesAA ? '#16A34A' : '#D97706' }}
                     >
-                      {row.audit.ratioFormatted} · {row.audit.grade}
+                      {row.audit.ratioFormatted} · {row.audit.grade === 'Fail' ? t.wcagFail : row.audit.grade}
                     </span>
                   </div>
                 ))}
@@ -250,23 +257,23 @@ export function ThemeEditorView() {
         {/* Token Exporter */}
         <LkCard
           className="lg:col-span-7"
-          title="Platform-Neutral Token Export"
-          subtitle="Export live theme values for React CSS variables, JSON schemas, or Android Jetpack Compose."
+          title={t.exporterTitle}
+          subtitle={t.exporterSubtitle}
           action={
             <LkButton size="sm" variant="primary" leftIcon="Copy" onClick={handleCopyTokens}>
-              Copy
+              {dictionary.common.copy}
             </LkButton>
           }
         >
           <div className="mb-3">
             <LkSegmentedControl
-              ariaLabel="Token export format"
+              ariaLabel={t.exporterTitle}
               value={exportFormat}
               onChange={setExportFormat}
               options={[
-                { value: 'json', label: 'Platform JSON' },
-                { value: 'css', label: 'CSS Variables' },
-                { value: 'kotlin', label: 'Kotlin Compose' },
+                { value: 'json', label: t.formatJson },
+                { value: 'css', label: t.formatCss },
+                { value: 'kotlin', label: t.formatKotlin },
               ]}
             />
           </div>

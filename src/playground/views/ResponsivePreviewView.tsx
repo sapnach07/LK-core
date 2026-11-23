@@ -19,32 +19,40 @@ const VIEWPORT_WIDTH: Record<ViewportSize, string> = {
 };
 
 export function ResponsivePreviewView() {
-  const { settings, notify } = useLkCore();
+  const { settings, dictionary, notify } = useLkCore();
+  const r = dictionary.responsive;
+
   const [viewport, setViewport] = useState<ViewportSize>('desktop');
   const [sampleFilter, setSampleFilter] = useState<'active' | 'archived'>('active');
   const [focusMode, setFocusMode] = useState(true);
+
+  const densityLabel =
+    settings.density === 'compact'
+      ? dictionary.common.compact
+      : settings.density === 'spacious'
+        ? dictionary.common.spacious
+        : dictionary.common.comfortable;
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--lk-text)' }}>
-            Responsive Viewport Preview
+            {r.title}
           </h1>
           <p className="text-sm mt-1" style={{ color: 'var(--lk-text-secondary)' }}>
-            Inspect how an LK-powered application adapts across Apple-grade desktop layouts and
-            One UI thumb-reachable mobile frames.
+            {r.subtitle}
           </p>
         </div>
 
         <LkSegmentedControl
-          ariaLabel="Simulated viewport size"
+          ariaLabel={r.title}
           value={viewport}
           onChange={setViewport}
           options={[
-            { value: 'desktop', label: 'Desktop' },
-            { value: 'tablet', label: '768px Tablet' },
-            { value: 'mobile', label: '390px Mobile' },
+            { value: 'desktop', label: r.viewports.desktop },
+            { value: 'tablet', label: r.viewports.tablet },
+            { value: 'mobile', label: r.viewports.mobile },
           ]}
         />
       </div>
@@ -72,7 +80,7 @@ export function ResponsivePreviewView() {
             <div className="flex items-center gap-2.5">
               <LkLogoMark size={24} />
               <span className="text-sm font-semibold whitespace-nowrap" style={{ color: 'var(--lk-text)' }}>
-                LK Studio Notes
+                {r.miniAppTitle}
               </span>
             </div>
             <LkButton
@@ -81,13 +89,13 @@ export function ResponsivePreviewView() {
               leftIcon="Plus"
               onClick={() =>
                 notify({
-                  title: 'Mini-app action',
-                  description: `Created item in ${viewport} preview.`,
+                  title: r.newEntryBtn,
+                  description: `${r.miniAppTitle} (${r.viewports[viewport]})`,
                   variant: 'success',
                 })
               }
             >
-              New Entry
+              {r.newEntryBtn}
             </LkButton>
           </div>
 
@@ -100,7 +108,7 @@ export function ResponsivePreviewView() {
             >
               <LkCard surface="solid" className="!p-4">
                 <p className="text-xs" style={{ color: 'var(--lk-text-muted)' }}>
-                  Synced Workspaces
+                  {r.statWorkspaces}
                 </p>
                 <p className="text-xl font-bold font-mono tabular-nums mt-1" style={{ color: 'var(--lk-text)' }}>
                   14
@@ -108,18 +116,18 @@ export function ResponsivePreviewView() {
               </LkCard>
               <LkCard surface="solid" className="!p-4">
                 <p className="text-xs" style={{ color: 'var(--lk-text-muted)' }}>
-                  Shared Components
+                  {r.statComponents}
                 </p>
-                <p className="text-xl font-bold font-mono tabular-nums mt-1" style={{ color: 'var(--lk-accent)' }}>
+                <p className="text-xl font-bold font-mono tabular-nums mt-1" style={{ color: 'var(--lk-accent-ink)' }}>
                   28
                 </p>
               </LkCard>
               <LkCard surface="solid" className="!p-4">
                 <p className="text-xs" style={{ color: 'var(--lk-text-muted)' }}>
-                  Active Profile
+                  {r.statProfile}
                 </p>
-                <p className="text-xl font-bold capitalize mt-1" style={{ color: 'var(--lk-text)' }}>
-                  {settings.density}
+                <p className="text-xl font-bold mt-1" style={{ color: 'var(--lk-text)' }}>
+                  {densityLabel}
                 </p>
               </LkCard>
             </div>
@@ -127,35 +135,28 @@ export function ResponsivePreviewView() {
             <LkGlassSurface rounded="xl" className="p-4">
               <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                 <LkSegmentedControl
-                  ariaLabel="Preview item filter"
+                  ariaLabel={r.miniAppTitle}
                   value={sampleFilter}
                   onChange={setSampleFilter}
                   options={[
-                    { value: 'active', label: 'Active (3)' },
-                    { value: 'archived', label: 'Archived (1)' },
+                    { value: 'active', label: r.filterActive },
+                    { value: 'archived', label: r.filterArchived },
                   ]}
                 />
                 <span className="text-xs font-mono tabular-nums" style={{ color: 'var(--lk-text-muted)' }}>
-                  {viewport === 'mobile' ? '390px' : viewport === 'tablet' ? '768px' : 'Fluid'}
+                  {viewport === 'mobile' ? '390px' : viewport === 'tablet' ? '768px' : r.fluidLabel}
                 </span>
               </div>
 
               <LkSwitch
-                label="One UI Bottom Reach Mode"
-                description="Keep primary interactive toggles accessible within thumb range."
+                label={r.oneUiLabel}
+                description={r.oneUiDesc}
                 checked={focusMode}
                 onChange={setFocusMode}
               />
 
               <div className="divide-y mt-3" style={{ borderColor: 'var(--lk-border)' }}>
-                {(sampleFilter === 'active'
-                  ? [
-                      'LK Hybrid Glass Token Spec',
-                      'Android Compose Color Mapper',
-                      'LocalStorage Preference Sync',
-                    ]
-                  : ['Legacy Draft v0.9']
-                ).map((item) => (
+                {(sampleFilter === 'active' ? r.sampleItems : r.archivedItems).map((item) => (
                   <div
                     key={item}
                     className="py-2.5 flex items-center justify-between gap-2 text-sm"

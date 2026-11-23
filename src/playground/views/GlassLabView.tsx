@@ -13,7 +13,8 @@ const DARK_BACKDROP = '/src/assets/images/glass_backdrop_obsidian_gold_179534442
 const LIGHT_BACKDROP = '/src/assets/images/glass_backdrop_arctic_frost_1795344427778.jpg';
 
 export function GlassLabView() {
-  const { settings, updateSettings, notify } = useLkCore();
+  const { settings, dictionary, updateSettings, notify } = useLkCore();
+  const g = dictionary.glassLab;
   const [scene, setScene] = useState<'obsidian' | 'arctic' | 'mesh'>('obsidian');
   const [imgError, setImgError] = useState(false);
 
@@ -22,25 +23,24 @@ export function GlassLabView() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--lk-text)' }}>
-            Glass Effects Laboratory
+            {g.title}
           </h1>
           <p className="text-sm mt-1" style={{ color: 'var(--lk-text-secondary)' }}>
-            Calibrate Apple-inspired Liquid Glass translucency, backdrop blur radius, and specular
-            rim highlights against rich tonal backgrounds.
+            {g.subtitle}
           </p>
         </div>
 
         <LkSegmentedControl
-          ariaLabel="Laboratory background scene"
+          ariaLabel={g.title}
           value={scene}
           onChange={(next) => {
             setScene(next);
             setImgError(false);
           }}
           options={[
-            { value: 'obsidian', label: 'Obsidian Gold' },
-            { value: 'arctic', label: 'Arctic Frost' },
-            { value: 'mesh', label: 'Geometric Mesh' },
+            { value: 'obsidian', label: g.scenes.obsidian },
+            { value: 'arctic', label: g.scenes.arctic },
+            { value: 'mesh', label: g.scenes.mesh },
           ]}
         />
       </div>
@@ -61,7 +61,7 @@ export function GlassLabView() {
           ) : (
             <img
               src={scene === 'obsidian' ? DARK_BACKDROP : LIGHT_BACKDROP}
-              alt="Glass laboratory optical backdrop"
+              alt={dictionary.overview.backdropAlt}
               referrerPolicy="no-referrer"
               onError={() => setImgError(true)}
               className="absolute inset-0 w-full h-full object-cover"
@@ -79,23 +79,22 @@ export function GlassLabView() {
                 <div>
                   <p
                     className="text-xs font-semibold uppercase tracking-wider"
-                    style={{ color: 'var(--lk-accent)' }}
+                    style={{ color: 'var(--lk-accent-ink)' }}
                   >
-                    {tier} tier
+                    {g.tierLabel(tier)}
                   </p>
                   <h3 className="text-base font-semibold mt-1" style={{ color: 'var(--lk-text)' }}>
-                    Hybrid Glass
+                    {g.cardTitle}
                   </h3>
                   <p className="text-xs mt-1.5 leading-relaxed" style={{ color: 'var(--lk-text-secondary)' }}>
-                    Dynamic backdrop filter paired with {settings.specularHighlight ? 'specular' : 'matte'}{' '}
-                    edge illumination.
+                    {g.cardDesc(settings.specularHighlight)}
                   </p>
                 </div>
                 <div
                   className="pt-3 mt-3 border-t flex items-center justify-between text-xs font-mono tabular-nums"
                   style={{ borderColor: 'var(--lk-border)', color: 'var(--lk-text-muted)' }}
                 >
-                  <span>Blur</span>
+                  <span>{g.blurMetric}</span>
                   <span>
                     {settings.glassEnabled
                       ? `${
@@ -116,18 +115,18 @@ export function GlassLabView() {
         {/* Glass Calibration Controls */}
         <LkCard
           className="lg:col-span-4"
-          title="Optical Calibration"
-          subtitle="Updates global LK Glass parameters immediately."
+          title={g.calibrationTitle}
+          subtitle={g.calibrationSub}
         >
           <div className="flex flex-col gap-5">
             <LkSwitch
-              label="Glassmorphism Active"
-              description="Turn off to test crisp solid fallback surfaces."
+              label={g.glassActive}
+              description={g.glassActiveDesc}
               checked={settings.glassEnabled}
               onChange={(val) => updateSettings({ glassEnabled: val })}
             />
             <LkSlider
-              label="Blur Radius"
+              label={g.blurRadius}
               min={0}
               max={32}
               unit="px"
@@ -135,7 +134,7 @@ export function GlassLabView() {
               onChange={(val) => updateSettings({ blurIntensity: val })}
             />
             <LkSlider
-              label="Surface Opacity"
+              label={g.surfaceOpacity}
               min={0.35}
               max={0.95}
               step={0.05}
@@ -144,8 +143,8 @@ export function GlassLabView() {
               onChange={(val) => updateSettings({ glassOpacity: val })}
             />
             <LkSwitch
-              label="Specular Top Rim"
-              description="Subtle 1px inner light reflection along the upper edge."
+              label={g.specularTop}
+              description={g.specularTopDesc}
               checked={settings.specularHighlight}
               onChange={(val) => updateSettings({ specularHighlight: val })}
             />
@@ -160,13 +159,13 @@ export function GlassLabView() {
                   specularHighlight: true,
                 });
                 notify({
-                  title: 'Optical defaults restored',
-                  description: 'Reset blur to 18px and surface opacity to 76%.',
+                  title: dictionary.notifications.opticalResetTitle,
+                  description: dictionary.notifications.opticalResetDesc,
                   variant: 'info',
                 });
               }}
             >
-              Restore Optical Defaults
+              {g.restoreBtn}
             </LkButton>
           </div>
         </LkCard>
