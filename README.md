@@ -1,4 +1,4 @@
-# `@lk/core` (v1.0.0) — Bibliothèque LK Core
+# `@lk/core` (v1.1.0) — Bibliothèque LK Core
 
 Système de design **LK Hybrid Glass**, bibliothèque de composants React + TypeScript, moteur de thèmes dynamique, paramètres locaux isolés par application, accessibilité WCAG et module de visualisation **LK Charts** pour l’ensemble des applications de l’écosystème LK (web, React, TypeScript et Google AI Studio).
 
@@ -33,13 +33,13 @@ Selon le mode de distribution choisi (voir section 6) :
 
 ```bash
 # Option A : depuis un fichier archive généré par `npm pack` (100 % gratuit et privé)
-npm install ./vendor/lk-core-1.0.0.tgz
+npm install ./vendor/lk-core-1.1.0.tgz
 
 # Option B : depuis GitHub Packages privé (après configuration .npmrc)
-npm install @lk/core@1.0.0
+npm install @lk/core@1.1.0
 
 # Option C : depuis un tag GitHub privé contenant dist/
-npm install git+ssh://git@github.com:<organisation>/lk-core.git#v1.0.0
+npm install git+ssh://git@github.com:<organisation>/lk-core.git#v1.1.0
 ```
 
 ### Étape 2 — Charger les styles LK Core dans `src/main.tsx`
@@ -108,6 +108,7 @@ Vous pouvez importer depuis le point d’entrée global `@lk/core` ou cibler un 
 | `@lk/core/storage` | Persistance locale isolée | `createLkStore`, `loadLkSettings`, `saveLkSettings`, `resolveLkStorageKeys`, `getLkStorageStats`, `clearLkStorage` |
 | `@lk/core/accessibility` | Contraste WCAG & anneau focus | `getAccessibleButtonInk`, `auditPairContrast`, `calculateContrastRatio`, `evaluateContrast`, `pickAccessibleForeground`, `LK_FOCUS_RING_CLASS` |
 | `@lk/core/platform` | Exports multiplateformes & i18n | `exportTokensAsJson`, `exportTokensAsCss`, `exportTokensAsKotlinCompose`, `buildPlatformTokenPayload`, `getLkDictionary`, `formatLkDateTime`, `formatLkNumber` |
+| `@lk/core/cloud` | SDK Cloud optionnel & Offline-First | `LkCloudProvider`, `LkCloudBridge`, `useLkCloud`, `useLkCloudOptional`, `createLkSyncEngine`, `verifyAndValidateCloudBundle`, `sanitizeSvgIcon`, `checkRollbackAuthorization` |
 | `@lk/core/styles.css` | Styles complets autonomes | Variables `--lk-*`, verre `.lk-glass-*`, animations, graphiques `.lk-chart-*`, utilitaires composants |
 | `@lk/core/tokens.css` | Tokens CSS seuls | Variables CSS `--lk-*` (`:root` / `.dark`), classes `.lk-glass-surface`, `.lk-focus-ring`, `.lk-reduced-motion` |
 
@@ -256,6 +257,46 @@ const kotlinTokens = exportTokensAsKotlinCompose(DEFAULT_LK_SETTINGS, 'dark');
 const montant = formatLkNumber(12450.5, 'space', 'fr');
 ```
 
+#### `@lk/core/cloud` — SDK Cloud optionnel & synchronisation Offline-First
+
+`@lk/core/cloud` reste **100 % optionnel** : le point d’entrée racine `@lk/core` ne l’importe pas et n’effectue aucun appel réseau lorsque Cloud n’est pas activé.
+
+```tsx
+import { LkCloudProvider, useLkCloud } from '@lk/core/cloud';
+import { LkToastRegion } from '@lk/core';
+
+export default function App() {
+  return (
+    <LkCloudProvider
+      storagePrefix="lk-manage"
+      defaultSettings={{ language: 'fr', themeMode: 'dark', accentColor: '#D6B56D' }}
+      config={{
+        appId: 'lk-manage',
+        endpointUrl: 'https://cloud.example.com/api',
+        allowedPermissions: ['themes', 'icons', 'settings', 'charts', 'platform'],
+        trustedPublicKeys: [
+          {
+            keyId: 'lk-key-v1',
+            algorithm: 'ECDSA-P256-SHA256',
+            spkiBase64: '<CLE_PUBLIQUE_SPKI_BASE64>',
+          },
+        ],
+      }}
+    >
+      <MonApplication />
+      <LkToastRegion />
+    </LkCloudProvider>
+  );
+}
+```
+
+**Principes de sécurité & fonctionnement :**
+- **Permissions atomiques (`manifest.permissions`)** : chaque section du `payload` (`themes`, `icons`, `glass`, `motion`, `settings`, `accessibility`, `charts`, `platform`) doit être autorisée par `manifest.permissions` et rester dans `allowedPermissions` si défini ; toute violation rejette l’intégralité du bundle sans application partielle.
+- **Signatures `lk-sig-v1`** : double vérification Web Crypto (`payloadSha256` sur JSON canonique + signature asymétrique `ECDSA-P256-SHA256` ou `Ed25519` sur l’enveloppe `LK-CORE-CLOUD-SIG-V1`), gestion des dates de validité et rotation par `keyId`.
+- **Pairing sécurisé** : l’URL `endpointUrl` est préconfigurée en HTTPS (sauf `allowInsecureLocalhost` en dev local) et ne peut jamais être remplacée par un paramètre URL. Le code `?lk_pair=...` est extrait, nettoyé immédiatement via `history.replaceState` et protégé contre le rejeu.
+- **Synchronisation Offline-First & anti-rollback** : mise en cache `localStorage` re-vérifiée au démarrage, `ETag` (`304`), backoff exponentiel, distinction stricte entre erreur HTTP `401`/`403` transitoire et révocation définitive (`APP_REVOKED`, `TOKEN_REVOKED`, `TOKEN_PERMANENTLY_INVALID`, `APP_DELETED`), conservation du dernier bundle valide, et blocage des downgrades non signés (`manifest.rollback` requis).
+- **Limites de sécurité navigateur** : dans une application SPA React, le `readToken` stocké en `localStorage` est un jeton public/client en **lecture seule** scopé à l’application (jamais une clé privée ni un jeton administrateur) ; les icônes SVG distantes sont parsées sans `DOMParser`/`innerHTML` via une liste blanche XML/AST stricte.
+
 ---
 
 ## 4. Stratégie de versionnement et mise à jour multi-applications
@@ -280,7 +321,7 @@ const montant = formatLkNumber(12450.5, 'space', 'fr');
 
 | Canal | Coût | Confidentialité | Prérequis & remarques |
 | :--- | :--- | :--- | :--- |
-| **1. Archive `.tgz` locale (`npm pack`)** | **0 €** | **100 % privé** | Génère `lk-core-1.0.0.tgz` (~140 Ko) incluant `dist/` déjà compilé. Idéal pour copier directement dans un dossier `vendor/` de chaque projet Google AI Studio. |
+| **1. Archive `.tgz` locale (`npm pack`)** | **0 €** | **100 % privé** | Génère `lk-core-1.1.0.tgz` incluant `dist/` déjà compilé. Idéal pour copier directement dans un dossier `vendor/` de chaque projet Google AI Studio. |
 | **2. GitHub Packages (`npm.pkg.github.com`)** | **0 €** | **Privé (dépôt privé)** | Plan gratuit GitHub : **500 Mo** de stockage et **1 Go/mois** de transfert pour dépôts privés. Nécessite un `.npmrc` avec jeton `read:packages` dans l’app cliente. |
 | **3. Release / Tag GitHub privé précompilé** | **0 €** | **Privé (dépôt privé)** | `dist/` étant ignoré par `.gitignore` sur `main`, joignez le `.tgz` en pièce jointe d’une **GitHub Release privée** ou créez un tag de release contenant `dist/`. |
 | **4. Registre npm public (`npmjs.com`)** | **0 €** | **Public uniquement** | Déconseillé si vous souhaitez garder le dépôt/code privé ; nécessite en outre la propriété du scope `@lk` sur npmjs.com. |
@@ -291,7 +332,7 @@ const montant = formatLkNumber(12450.5, 'space', 'fr');
 
 ```bash
 npm run dev              # Lance LK Core Playground sur http://localhost:3000
-npm test                 # Exécute les 19 tests unitaires (tsx --test)
+npm test                 # Exécute les tests unitaires (tsx --test)
 npm run lint             # Vérifie les types TypeScript globaux (tsc --noEmit)
 npm run build:lib        # Compile uniquement la bibliothèque (@lk/core dans dist/)
 npm run verify:exports   # Contrôle tous les exports, .d.ts, CSS et dépendances externes
@@ -300,4 +341,4 @@ npm run build            # Compile Playground + Bibliothèque
 npm pack --dry-run       # Prévisualise les fichiers inclus dans l'archive sans publier
 ```
 
-Voir également [docs/INTEGRATION.md](./docs/INTEGRATION.md) pour le pas-à-pas détaillé d’intégration et les commandes de release.
+Voir également [docs/INTEGRATION.md](./docs/INTEGRATION.md) pour le pas-à-pas détaillé d’intégration, de sécurité Cloud et les commandes de release.

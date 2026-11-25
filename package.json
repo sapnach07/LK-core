@@ -1,8 +1,8 @@
 {
   "name": "@lk/core",
   "private": false,
-  "version": "1.0.0",
-  "description": "LK Core 1.0 — Système de design modulaire React & TypeScript (LK Hybrid Glass, Thèmes, Paramètres, Motion, Accessibilité et LK Charts)",
+  "version": "1.1.0",
+  "description": "LK Core 1.1 — Système de design modulaire React & TypeScript (LK Hybrid Glass, Thèmes, Paramètres, Motion, Accessibilité, LK Charts et SDK Cloud Offline-First)",
   "license": "Apache-2.0",
   "keywords": [
     "lk-core",
@@ -76,6 +76,10 @@
     "./platform": {
       "types": "./dist/platform/index.d.ts",
       "import": "./dist/platform.js"
+    },
+    "./cloud": {
+      "types": "./dist/cloud/index.d.ts",
+      "import": "./dist/cloud.js"
     },
     "./styles.css": {
       "types": "./dist/styles.css.d.ts",

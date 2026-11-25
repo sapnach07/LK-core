@@ -59,6 +59,7 @@ import {
   Zap,
   type LucideIcon,
 } from 'lucide-react';
+import { useLkRemoteIcons, type LkRemoteSvgNode } from './LkIconContext';
 
 export function LkLogoMark({
   size = 28,
@@ -232,11 +233,19 @@ export const LK_ICON_CATALOG: LkIconMeta[] = [
 ];
 
 export interface LkIconProps {
-  name: LkIconName;
+  name: LkIconName | (string & {});
   size?: number;
   strokeWidth?: number;
   className?: string;
   accent?: boolean;
+}
+
+function renderSafeSvgNodes(nodes: LkRemoteSvgNode[], keyPrefix = 'n'): React.ReactNode {
+  return nodes.map((node, index) => {
+    const key = `${keyPrefix}-${index}`;
+    const children = node.children?.length ? renderSafeSvgNodes(node.children, key) : undefined;
+    return React.createElement(node.tag, { key, ...node.attributes }, children);
+  });
 }
 
 export function LkIcon({
@@ -246,7 +255,39 @@ export function LkIcon({
   className = '',
   accent = false,
 }: LkIconProps) {
-  const IconComponent = LK_ICON_REGISTRY[name];
+  const remoteIcons = useLkRemoteIcons();
+  const remoteIcon = remoteIcons?.[name];
+
+  if (remoteIcon) {
+    const rootAttrs = remoteIcon.rootAttributes ?? {};
+    return (
+      <svg
+        fill={rootAttrs.fill ?? 'none'}
+        stroke={rootAttrs.stroke ?? 'currentColor'}
+        strokeWidth={rootAttrs.strokeWidth ?? strokeWidth}
+        strokeLinecap={(rootAttrs.strokeLinecap as 'butt' | 'round' | 'square' | undefined) ?? 'round'}
+        strokeLinejoin={(rootAttrs.strokeLinejoin as 'miter' | 'round' | 'bevel' | undefined) ?? 'round'}
+        width={size}
+        height={size}
+        viewBox={remoteIcon.viewBox}
+        aria-hidden="true"
+        data-lk-remote-icon={name}
+        className={className}
+        style={accent ? { color: 'var(--lk-accent)' } : undefined}
+      >
+        {renderSafeSvgNodes(remoteIcon.nodes)}
+      </svg>
+    );
+  }
+
+  const IconComponent = Object.prototype.hasOwnProperty.call(LK_ICON_REGISTRY, name)
+    ? LK_ICON_REGISTRY[name as LkIconName]
+    : undefined;
+
+  if (!IconComponent) {
+    return null;
+  }
+
   return (
     <IconComponent
       size={size}

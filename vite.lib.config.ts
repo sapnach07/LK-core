@@ -16,6 +16,7 @@ const LIB_ENTRIES = {
   storage: path.resolve(__dirname, 'src/lk-core/storage/index.ts'),
   accessibility: path.resolve(__dirname, 'src/lk-core/accessibility/index.ts'),
   platform: path.resolve(__dirname, 'src/lk-core/platform/index.ts'),
+  cloud: path.resolve(__dirname, 'src/lk-core/cloud/index.ts'),
   styles: path.resolve(__dirname, 'src/lk-core/styles/entry.ts'),
 };
 
